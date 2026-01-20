@@ -1,0 +1,35 @@
+{
+  "matchup_id": { "S": "active" },
+  "title": { "S": "Best Burger Showdown" },
+  "category": { "S": "food" },
+  "city": { "S": "Chattanooga" },
+  "left_votes": { "N": "128" },
+  "right_votes": { "N": "109" },
+  "left": {
+    "M": {
+      "id": { "S": "tremont-tavern" },
+      "name": { "S": "Tremont Tavern" },
+      "short_blurb": {
+        "S": "Char-grilled, loud, and zero pretense. The kind of place you go back to when you want it done right."
+      },
+      "neighborhood": { "S": "Northshore" },
+      "tagline": { "S": "Burgers" },
+      "url": { "S": "" },
+      "photo_url": { "S": "" }
+    }
+  },
+  "right": {
+    "M": {
+      "id": { "S": "main-st-meats" },
+      "name": { "S": "Main St Meats" },
+      "short_blurb": {
+        "S": "A slicker bite with serious smoke and a menu that always feels one step ahead."
+      },
+      "neighborhood": { "S": "Southside" },
+      "tagline": { "S": "Smokehouse" },
+      "url": { "S": "" },
+      "photo_url": { "S": "" }
+    }
+  },
+  "updated_at": { "S": "2025-01-20T00:00:00Z" }
+}

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scenic City Rumble</title>
+    <meta
+      name="description"
+      content="Two local favorites enter. You pick the winner."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="brand">
+          <span class="brand-pill">Scenic City Rumble</span>
+          <h1>Two local legends enter. You pick the winner.</h1>
+          <p>
+            Daily head-to-heads for Chattanooga. Short lists, real taste, zero
+            tourist fluff.
+          </p>
+          <div class="hero-actions">
+            <button class="btn primary" data-scroll="arena">Vote now</button>
+            <button class="btn ghost">Submit a matchup</button>
+          </div>
+          <div class="hero-meta">
+            <div>
+              <strong>Today:</strong> Burger joints - 684 votes - Updated just now
+            </div>
+            <div class="dot">Open until 10:00 PM</div>
+          </div>
+        </div>
+        <aside class="hero-card">
+          <div class="card-label">Tonight's Rumble</div>
+          <div class="card-title" id="hero-matchup">Tremont Tavern vs Main St Meats</div>
+          <div class="card-meta" id="hero-meta">Downtown - Food - 18 minutes left</div>
+          <div class="card-cta">Pick a champ</div>
+        </aside>
+      </header>
+
+      <main>
+        <section class="arena" id="arena">
+          <div class="arena-header">
+            <div>
+              <h2>Today's Rumble</h2>
+              <div class="arena-sub" id="matchup-sub">Chattanooga - Food</div>
+            </div>
+            <div class="arena-badge">Live</div>
+          </div>
+
+          <div class="matchup">
+            <article class="entry" data-entry="left">
+              <div class="entry-preview" aria-hidden="true"></div>
+              <div class="entry-top">
+                <div>
+                  <h3 id="left-name">Tremont Tavern</h3>
+                  <div class="entry-sub" id="left-sub">Northshore - Burgers</div>
+                </div>
+                <span class="tag">Legend</span>
+              </div>
+              <p id="left-blurb">
+                Char-grilled, loud, and zero pretense. The kind of place you go
+                back to when you want it done right.
+              </p>
+              <div class="entry-actions">
+                <button class="btn vote" data-side="left">Pick Tremont</button>
+                <div class="score">
+                  <span class="count" id="left-count">128</span>
+                  <span class="pct" id="left-pct">54%</span>
+                </div>
+              </div>
+            </article>
+
+            <div class="vs">VS</div>
+
+            <article class="entry" data-entry="right">
+              <div class="entry-preview" aria-hidden="true"></div>
+              <div class="entry-top">
+                <div>
+                  <h3 id="right-name">Main St Meats</h3>
+                  <div class="entry-sub" id="right-sub">Southside - Smokehouse</div>
+                </div>
+                <span class="tag">Challenger</span>
+              </div>
+              <p id="right-blurb">
+                A slicker bite with serious smoke and a menu that always feels
+                one step ahead.
+              </p>
+              <div class="entry-actions">
+                <button class="btn vote" data-side="right">Pick Main St</button>
+                <div class="score">
+                  <span class="count" id="right-count">109</span>
+                  <span class="pct" id="right-pct">46%</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="arena-footer">
+            <div class="tiny">Last updated 2 minutes ago</div>
+            <button class="btn link">Next matchup</button>
+          </div>
+        </section>
+
+        <section class="info-grid">
+          <article class="panel">
+            <h4>How it works</h4>
+            <p>One matchup a day. One vote per person. Fast, local, done.</p>
+          </article>
+          <article class="panel">
+            <h4>What we cover</h4>
+            <p>Food, music, outdoors, and weird local gems that deserve love.</p>
+          </article>
+          <article class="panel">
+            <h4>Bring the heat</h4>
+            <p>Submit a matchup and we will get it in the ring.</p>
+          </article>
+        </section>
+
+        <section class="history-section" id="history">
+          <h3>Past Brawls</h3>
+          <div class="history-list" id="history-list">
+            <div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Loading history...</div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div>Scenic City Rumble - Chattanooga, TN</div>
+        <div>scrumble.dev</div>
+      </footer>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>

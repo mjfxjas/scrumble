@@ -1,0 +1,142 @@
+{
+  "entries": [
+    {
+      "id": "tremont-tavern",
+      "name": "Tremont Tavern",
+      "blurb": "Char-grilled, loud, and zero pretense. The kind of place you go back to when you want it done right.",
+      "neighborhood": "Northshore",
+      "category": "food",
+      "tag": "Legend"
+    },
+    {
+      "id": "main-st-meats",
+      "name": "Main St Meats",
+      "blurb": "A slicker bite with serious smoke and a menu that always feels one step ahead.",
+      "neighborhood": "Southside",
+      "category": "food",
+      "tag": "Challenger"
+    },
+    {
+      "id": "mean-mug",
+      "name": "Mean Mug",
+      "blurb": "Strong coffee, no fuss. The spot where locals actually work and the vibe stays chill.",
+      "neighborhood": "Southside",
+      "category": "coffee",
+      "tag": "Local"
+    },
+    {
+      "id": "velo",
+      "name": "Velo Coffee",
+      "blurb": "Bright, clean, and always dialed in. Third-wave done right without the attitude.",
+      "neighborhood": "Northshore",
+      "category": "coffee",
+      "tag": "Favorite"
+    },
+    {
+      "id": "sunset-rock",
+      "name": "Sunset Rock",
+      "blurb": "The classic overlook. Short hike, big payoff, and you'll share it with half the city on a good night.",
+      "neighborhood": "Lookout Mountain",
+      "category": "outdoors",
+      "tag": "Icon"
+    },
+    {
+      "id": "renaissance-park",
+      "name": "Renaissance Park",
+      "blurb": "River views, open trails, and way fewer crowds. The locals' pick when Sunset feels too busy.",
+      "neighborhood": "Northshore",
+      "category": "outdoors",
+      "tag": "Hidden"
+    },
+    {
+      "id": "honest-pint",
+      "name": "Honest Pint",
+      "blurb": "Craft beer, zero pretense, and a patio that feels like your friend's backyard.",
+      "neighborhood": "Southside",
+      "category": "drinks",
+      "tag": "Classic"
+    },
+    {
+      "id": "hair-of-the-dog",
+      "name": "Hair of the Dog",
+      "blurb": "Dive bar energy with a killer tap list. Late nights, loud music, good people.",
+      "neighborhood": "Southside",
+      "category": "drinks",
+      "tag": "Dive"
+    },
+    {
+      "id": "taco-mamacita",
+      "name": "Taco Mamacita",
+      "blurb": "Upscale tacos with a scene. Great for groups, even better for margaritas.",
+      "neighborhood": "Southside",
+      "category": "food",
+      "tag": "Popular"
+    },
+    {
+      "id": "taqueria-jalisco",
+      "name": "Taqueria Jalisco",
+      "blurb": "No frills, all flavor. The real deal for tacos, tortas, and authenticity.",
+      "neighborhood": "East Ridge",
+      "category": "food",
+      "tag": "Authentic"
+    },
+    {
+      "id": "rembrandt",
+      "name": "Rembrandt's",
+      "blurb": "Cozy, romantic, and consistently excellent. The date night standard.",
+      "neighborhood": "Southside",
+      "category": "food",
+      "tag": "Upscale"
+    },
+    {
+      "id": "st-johns",
+      "name": "St. John's",
+      "blurb": "Farm-to-table done with soul. Seasonal menu, warm vibe, worth the wait.",
+      "neighborhood": "Northshore",
+      "category": "food",
+      "tag": "Elevated"
+    }
+  ],
+  "matchups": [
+    {
+      "id": "m001",
+      "title": "Burger Battle",
+      "left_entry_id": "tremont-tavern",
+      "right_entry_id": "main-st-meats",
+      "category": "Food",
+      "active": true
+    },
+    {
+      "id": "m002",
+      "title": "Coffee Clash",
+      "left_entry_id": "mean-mug",
+      "right_entry_id": "velo",
+      "category": "Coffee",
+      "active": false
+    },
+    {
+      "id": "m003",
+      "title": "Sunset Showdown",
+      "left_entry_id": "sunset-rock",
+      "right_entry_id": "renaissance-park",
+      "category": "Outdoors",
+      "active": false
+    },
+    {
+      "id": "m004",
+      "title": "Taco Throwdown",
+      "left_entry_id": "taco-mamacita",
+      "right_entry_id": "taqueria-jalisco",
+      "category": "Food",
+      "active": false
+    },
+    {
+      "id": "m005",
+      "title": "Date Night Duel",
+      "left_entry_id": "rembrandt",
+      "right_entry_id": "st-johns",
+      "category": "Food",
+      "active": false
+    }
+  ]
+}
