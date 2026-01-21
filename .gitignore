@@ -1,0 +1,5 @@
+.aws-sam/
+logs/
+.DS_Store
+.context
+**/.context

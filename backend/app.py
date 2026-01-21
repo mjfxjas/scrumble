@@ -77,6 +77,14 @@ def handler(event, context):
                 return failure
             body = parse_body(event)
             return create_matchup(body, headers)
+        elif path == '/submit' and method == 'POST':
+            body = json.loads(event.get('body', '{}'))
+            return submit_matchup(body, headers)
+        elif path == '/admin/submissions' and method == 'GET':
+            allowed, failure = require_admin(event, headers)
+            if not allowed:
+                return failure
+            return get_submissions(headers)
         else:
             return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'})}
     except Exception as e:
@@ -97,6 +105,13 @@ def get_active_matchup(headers):
     vote_resp = table.get_item(Key={'pk': f"VOTES#{matchup['id']}", 'sk': 'TOTAL'})
     votes = vote_resp.get('Item', {'left': 0, 'right': 0})
     
+    # Boost votes with base + time-based growth
+    import time
+    base_boost = 150
+    hours_since_epoch = int(time.time()) // 3600
+    time_boost_left = (hours_since_epoch * 3) % 7  # 0-6 votes per hour
+    time_boost_right = (hours_since_epoch * 2) % 5  # 0-4 votes per hour
+    
     result = {
         'matchup': {
             'id': matchup['id'],
@@ -108,18 +123,24 @@ def get_active_matchup(headers):
             'name': left['name'],
             'blurb': left['blurb'],
             'neighborhood': left['neighborhood'],
-            'tag': left.get('tag', 'Local')
+            'tag': left.get('tag', 'Local'),
+            'url': left.get('url', ''),
+            'image_url': left.get('image_url', ''),
+            'address': left.get('address', '')
         },
         'right': {
             'id': right['id'],
             'name': right['name'],
             'blurb': right['blurb'],
             'neighborhood': right['neighborhood'],
-            'tag': right.get('tag', 'Local')
+            'tag': right.get('tag', 'Local'),
+            'url': right.get('url', ''),
+            'image_url': right.get('image_url', ''),
+            'address': right.get('address', '')
         },
         'votes': {
-            'left': int(votes.get('left', 0)),
-            'right': int(votes.get('right', 0))
+            'left': int(votes.get('left', 0)) + base_boost + time_boost_left,
+            'right': int(votes.get('right', 0)) + base_boost + time_boost_right
         }
     }
     
@@ -300,3 +321,51 @@ def create_matchup(body, headers):
         return activate_matchup({'matchup_id': matchup_id}, headers)
 
     return json_response(200, headers, {'ok': True, 'matchup_id': matchup_id})
+
+def submit_matchup(body, headers):
+    left_name = body.get('left_name', '').strip()
+    right_name = body.get('right_name', '').strip()
+    category = body.get('category', '').strip()
+    email = body.get('email', '').strip()
+    reason = body.get('reason', '').strip()
+    
+    if not left_name or not right_name or not category:
+        return json_response(400, headers, {'error': 'Missing required fields'})
+    
+    timestamp = datetime.utcnow().isoformat()
+    
+    table.put_item(Item={
+        'pk': 'SUBMISSION',
+        'sk': timestamp,
+        'left_name': left_name,
+        'right_name': right_name,
+        'category': category,
+        'email': email,
+        'reason': reason,
+        'status': 'pending',
+        'created_at': timestamp
+    })
+    
+    return json_response(200, headers, {'ok': True})
+
+def get_submissions(headers):
+    resp = table.query(
+        KeyConditionExpression='pk = :pk',
+        ExpressionAttributeValues={':pk': 'SUBMISSION'},
+        ScanIndexForward=False,
+        Limit=50
+    )
+    
+    submissions = []
+    for item in resp.get('Items', []):
+        submissions.append({
+            'timestamp': item['sk'],
+            'left_name': item.get('left_name', ''),
+            'right_name': item.get('right_name', ''),
+            'category': item.get('category', ''),
+            'email': item.get('email', ''),
+            'reason': item.get('reason', ''),
+            'status': item.get('status', 'pending')
+        })
+    
+    return json_response(200, headers, {'submissions': submissions})

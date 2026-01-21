@@ -2,17 +2,6 @@ const API_BASE = (window.SCRUMBLE_API_BASE || "").trim();
 const API_URL = API_BASE.endsWith("/") ? API_BASE.slice(0, -1) : API_BASE;
 const ADMIN_KEY_STORAGE = "scrumble-admin-key";
 
-function hasApi() {
-  return API_URL.length > 0;
-}
-
-function setStatus(id, message, isError = false) {
-  const node = document.getElementById(id);
-  if (!node) return;
-  node.textContent = message;
-  node.style.color = isError ? "var(--accent)" : "var(--muted)";
-}
-
 function getAdminKey() {
   return localStorage.getItem(ADMIN_KEY_STORAGE) || "";
 }
@@ -25,283 +14,184 @@ function saveAdminKey(value) {
   localStorage.setItem(ADMIN_KEY_STORAGE, value);
 }
 
-function slugify(value) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
-
 async function apiFetch(path, options = {}, needsAdmin = false) {
-  if (!hasApi()) {
-    throw new Error("API base URL not set");
-  }
-
   const headers = options.headers || {};
   if (needsAdmin) {
     const key = getAdminKey();
-    if (!key) {
-      throw new Error("Admin key missing");
-    }
+    if (!key) throw new Error("Admin key missing");
     headers["x-admin-key"] = key;
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
+  const resp = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+  return data;
+}
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    
+    btn.classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    
+    if (tab === 'submissions') loadSubmissions();
+    if (tab === 'active') loadActive();
+    if (tab === 'history') loadHistory();
   });
+});
 
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = payload.error || `HTTP ${response.status}`;
-    throw new Error(message);
-  }
-
-  return payload;
-}
-
-async function loadActive() {
+// Load submissions
+async function loadSubmissions() {
+  const list = document.getElementById('submissions-list');
+  list.innerHTML = '<div style="color: var(--muted);">Loading...</div>';
+  
   try {
-    const data = await apiFetch("/matchup");
-    const title = data.matchup ? data.matchup.title : "No active matchup";
-    const left = data.left ? data.left.name : "";
-    const right = data.right ? data.right.name : "";
-    const category = data.matchup ? data.matchup.category : "";
-    const votes = data.votes || { left: 0, right: 0 };
-
-    document.getElementById("active-title").textContent = title;
-    document.getElementById("active-meta").textContent = `${left} vs ${right} - ${category}`;
-    document.getElementById("active-counts").textContent = `${votes.left} left / ${votes.right} right`;
-  } catch (error) {
-    document.getElementById("active-title").textContent = "Unable to load";
-    document.getElementById("active-meta").textContent = "";
-    document.getElementById("active-counts").textContent = "";
-    setStatus("key-status", error.message, true);
-  }
-}
-
-function renderHistory(items) {
-  const list = document.getElementById("admin-history");
-  list.innerHTML = "";
-
-  if (!items || items.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "tiny";
-    empty.textContent = "No matchups yet";
-    list.appendChild(empty);
-    return;
-  }
-
-  items.forEach((item) => {
-    const total = item.votes.left + item.votes.right;
-    const leftWon = item.votes.left >= item.votes.right;
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "history-item";
-
-    const matchup = document.createElement("div");
-    matchup.className = "history-matchup";
-
-    const title = document.createElement("div");
-    title.className = "history-title";
-    title.textContent = item.title + (item.active ? " (active)" : "");
-
-    const meta = document.createElement("div");
-    meta.className = "history-meta";
-    meta.textContent = `${item.category} - ${total} votes`;
-
-    matchup.appendChild(title);
-    matchup.appendChild(meta);
-
-    const result = document.createElement("div");
-    result.className = "history-result";
-
-    const winner = document.createElement("div");
-    winner.className = "history-winner";
-    winner.textContent = `${leftWon ? item.left.name : item.right.name} ${leftWon ? item.votes.left : item.votes.right}`;
-
-    const loser = document.createElement("div");
-    loser.className = "history-loser";
-    loser.textContent = `${leftWon ? item.right.name : item.left.name} ${leftWon ? item.votes.right : item.votes.left}`;
-
-    result.appendChild(winner);
-    result.appendChild(loser);
-
-    wrapper.appendChild(matchup);
-    wrapper.appendChild(result);
-    list.appendChild(wrapper);
-  });
-}
-
-async function loadHistory() {
-  try {
-    const data = await apiFetch("/history");
-    renderHistory(data.history || []);
-  } catch (error) {
-    renderHistory([]);
-    setStatus("key-status", error.message, true);
-  }
-}
-
-async function activateMatchup(event) {
-  event.preventDefault();
-  const input = document.getElementById("activate-id");
-  const matchupId = input.value.trim();
-
-  if (!matchupId) {
-    setStatus("activate-status", "Enter a matchup id", true);
-    return;
-  }
-
-  try {
-    await apiFetch(
-      "/admin/activate",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchup_id: matchupId }),
-      },
-      true
-    );
-    setStatus("activate-status", `Activated ${matchupId}`);
-    await loadActive();
-    await loadHistory();
-  } catch (error) {
-    setStatus("activate-status", error.message, true);
-  }
-}
-
-function buildEntry(prefix) {
-  const id = document.getElementById(`${prefix}-id`).value.trim();
-  const name = document.getElementById(`${prefix}-name`).value.trim();
-  const neighborhood = document.getElementById(`${prefix}-neighborhood`).value.trim();
-  const tag = document.getElementById(`${prefix}-tag`).value.trim();
-  const blurb = document.getElementById(`${prefix}-blurb`).value.trim();
-
-  if (!id && name) {
-    return {
-      id: slugify(name),
-      name,
-      neighborhood,
-      tag,
-      blurb,
-    };
-  }
-
-  return {
-    id,
-    name,
-    neighborhood,
-    tag,
-    blurb,
-  };
-}
-
-async function createMatchup(event) {
-  event.preventDefault();
-
-  const matchupId = document.getElementById("matchup-id").value.trim();
-  const title = document.getElementById("matchup-title").value.trim();
-  const category = document.getElementById("matchup-category").value.trim();
-  const active = document.getElementById("matchup-active").checked;
-
-  const left = buildEntry("left");
-  const right = buildEntry("right");
-
-  if (!matchupId || !title || !category) {
-    setStatus("create-status", "Matchup id, title, and category are required", true);
-    return;
-  }
-
-  if (!left.id || !left.name || !right.id || !right.name) {
-    setStatus("create-status", "Both entries need id and name", true);
-    return;
-  }
-
-  try {
-    await apiFetch(
-      "/admin/matchup",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          matchup: {
-            id: matchupId,
-            title,
-            category,
-            left_entry_id: left.id,
-            right_entry_id: right.id,
-            active,
-          },
-          left,
-          right,
-        }),
-      },
-      true
-    );
-
-    setStatus("create-status", `Created ${matchupId}`);
-    await loadHistory();
-    if (active) {
-      await loadActive();
+    const data = await apiFetch('/admin/submissions', {}, true);
+    
+    if (!data.submissions || data.submissions.length === 0) {
+      list.innerHTML = '<div style="color: var(--muted);">No submissions yet</div>';
+      return;
     }
-  } catch (error) {
-    setStatus("create-status", error.message, true);
+    
+    list.innerHTML = data.submissions.map(s => `
+      <div class="submission-item">
+        <div class="submission-header">
+          <div class="submission-title">${s.left_name} vs ${s.right_name}</div>
+          <span style="font-size: 0.8rem; color: var(--accent);">${s.status}</span>
+        </div>
+        <div class="submission-meta">Category: ${s.category}</div>
+        ${s.email ? `<div class="submission-meta">Email: ${s.email}</div>` : ''}
+        ${s.reason ? `<div style="color: var(--muted); font-size: 0.9rem; margin-top: 8px;">${s.reason}</div>` : ''}
+        <div class="submission-meta" style="margin-top: 8px;">Submitted: ${new Date(s.timestamp).toLocaleString()}</div>
+      </div>
+    `).join('');
+  } catch (err) {
+    list.innerHTML = `<div style="color: var(--accent);">Error: ${err.message}</div>`;
   }
 }
 
-function fillSample() {
-  document.getElementById("matchup-id").value = "m006";
-  document.getElementById("matchup-title").value = "Best Coffee Throwdown";
-  document.getElementById("matchup-category").value = "food";
-
-  document.getElementById("left-id").value = "mean-mug";
-  document.getElementById("left-name").value = "Mean Mug";
-  document.getElementById("left-neighborhood").value = "Northshore";
-  document.getElementById("left-tag").value = "Local";
-  document.getElementById("left-blurb").value = "No-frills coffee with loyal regulars and fast pours.";
-
-  document.getElementById("right-id").value = "vulpes-coffee";
-  document.getElementById("right-name").value = "Vulpes Coffee";
-  document.getElementById("right-neighborhood").value = "Southside";
-  document.getElementById("right-tag").value = "Challenger";
-  document.getElementById("right-blurb").value = "Soft jazz, clean menus, and a slow morning vibe.";
+// Load active matchup
+async function loadActive() {
+  const container = document.getElementById('active-matchup');
+  container.innerHTML = '<div style="color: var(--muted);">Loading...</div>';
+  
+  try {
+    const data = await apiFetch('/matchup');
+    
+    container.innerHTML = `
+      <div class="matchup-card">
+        <div class="matchup-title">${data.matchup.title}</div>
+        <div class="matchup-details">
+          <div><strong>Left:</strong> ${data.left.name} (${data.votes.left} votes)</div>
+          <div><strong>Right:</strong> ${data.right.name} (${data.votes.right} votes)</div>
+          <div><strong>Category:</strong> ${data.matchup.category}</div>
+          <div><strong>Total Votes:</strong> ${data.votes.left + data.votes.right}</div>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    container.innerHTML = `<div style="color: var(--accent);">Error: ${err.message}</div>`;
+  }
 }
 
-function init() {
-  document.getElementById("api-base").textContent = hasApi()
-    ? API_URL
-    : "Set SCRUMBLE_API_BASE in config.js";
-
-  const savedKey = getAdminKey();
-  if (savedKey) {
-    document.getElementById("admin-key").value = savedKey;
-    setStatus("key-status", "Admin key loaded");
+// Activate matchup
+document.getElementById('activate-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const status = document.getElementById('activate-status');
+  const input = document.getElementById('activate-id');
+  const matchupId = input.value.trim();
+  
+  if (!matchupId) {
+    status.style.color = 'var(--accent)';
+    status.textContent = 'Enter a matchup ID';
+    return;
   }
-
-  document.getElementById("admin-key-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const value = document.getElementById("admin-key").value.trim();
-    saveAdminKey(value);
-    setStatus("key-status", value ? "Key saved" : "Key cleared");
-  });
-
-  document.getElementById("clear-key").addEventListener("click", () => {
-    document.getElementById("admin-key").value = "";
-    saveAdminKey("");
-    setStatus("key-status", "Key cleared");
-  });
-
-  document.getElementById("refresh-active").addEventListener("click", loadActive);
-  document.getElementById("refresh-history").addEventListener("click", loadHistory);
-  document.getElementById("activate-form").addEventListener("submit", activateMatchup);
-  document.getElementById("create-form").addEventListener("submit", createMatchup);
-  document.getElementById("fill-sample").addEventListener("click", fillSample);
-
-  if (hasApi()) {
+  
+  try {
+    await apiFetch('/admin/activate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchup_id: matchupId })
+    }, true);
+    
+    status.style.color = 'var(--accent)';
+    status.textContent = `✓ Activated ${matchupId}`;
+    input.value = '';
     loadActive();
-    loadHistory();
+  } catch (err) {
+    status.style.color = 'var(--accent)';
+    status.textContent = 'Error: ' + err.message;
+  }
+});
+
+// Load history
+async function loadHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '<div style="color: var(--muted);">Loading...</div>';
+  
+  try {
+    const data = await apiFetch('/history');
+    
+    if (!data.history || data.history.length === 0) {
+      list.innerHTML = '<div style="color: var(--muted);">No matchups yet</div>';
+      return;
+    }
+    
+    list.innerHTML = data.history.map(h => {
+      const total = h.votes.left + h.votes.right;
+      const leftWon = h.votes.left > h.votes.right;
+      return `
+        <div class="submission-item">
+          <div class="submission-header">
+            <div class="submission-title">${h.title}</div>
+            ${h.active ? '<span style="font-size: 0.8rem; color: var(--accent);">ACTIVE</span>' : ''}
+          </div>
+          <div class="submission-meta">${h.category} • ${total} votes</div>
+          <div style="margin-top: 8px;">
+            <div style="color: ${leftWon ? 'var(--accent)' : 'var(--muted)'};">${h.left.name}: ${h.votes.left}</div>
+            <div style="color: ${!leftWon ? 'var(--accent)' : 'var(--muted)'};">${h.right.name}: ${h.votes.right}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    list.innerHTML = `<div style="color: var(--accent);">Error: ${err.message}</div>`;
   }
 }
 
-init();
+// Admin key management
+document.getElementById('key-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('admin-key');
+  const status = document.getElementById('key-status');
+  const value = input.value.trim();
+  
+  saveAdminKey(value);
+  status.style.color = 'var(--accent)';
+  status.textContent = value ? '✓ Key saved' : 'Key cleared';
+  
+  document.getElementById('admin-status').textContent = value ? 'Authenticated' : 'Not authenticated';
+});
+
+document.getElementById('clear-key').addEventListener('click', () => {
+  document.getElementById('admin-key').value = '';
+  saveAdminKey('');
+  document.getElementById('key-status').style.color = 'var(--accent)';
+  document.getElementById('key-status').textContent = 'Key cleared';
+  document.getElementById('admin-status').textContent = 'Not authenticated';
+});
+
+// Init
+const savedKey = getAdminKey();
+if (savedKey) {
+  document.getElementById('admin-key').value = savedKey;
+  document.getElementById('admin-status').textContent = 'Authenticated';
+  loadSubmissions();
+} else {
+  document.getElementById('admin-status').textContent = 'Not authenticated - Enter admin key in Settings';
+}

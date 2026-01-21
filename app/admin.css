@@ -1,127 +1,115 @@
-.admin-page {
-  padding-top: 32px;
+.admin-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
 }
 
-.admin-hero {
-  margin-bottom: 32px;
-  display: grid;
-  gap: 12px;
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--line);
+  overflow-x: auto;
 }
 
-.admin-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 12px 24px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.admin-panel h3 {
-  font-size: 1.6rem;
+.tab-btn:hover {
+  color: var(--accent);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.admin-content {
+  min-height: 400px;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+  animation: fade-in 0.3s ease;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.submission-item {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
   margin-bottom: 12px;
 }
 
-.admin-panel h4 {
-  font-size: 1.2rem;
-  margin-bottom: 10px;
-}
-
-.field {
-  display: grid;
-  gap: 6px;
-  font-size: 0.95rem;
-  color: var(--muted);
-}
-
-.field input,
-.field textarea {
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 10px 12px;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 0.95rem;
-  background: #fff;
-  color: var(--ink);
-}
-
-.field textarea {
-  resize: vertical;
-}
-
-.field.checkbox {
-  align-content: start;
-  justify-items: start;
-  gap: 8px;
-}
-
-.field.checkbox input {
-  width: 18px;
-  height: 18px;
-}
-
-.field-row {
+.submission-header {
   display: flex;
-  gap: 12px;
+  justify-content: space-between;
   align-items: center;
-  margin-top: 14px;
-  flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.entry-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.entry-card {
-  background: #fffdf9;
-  border-radius: var(--radius-md);
-  padding: 16px;
-  border: 1px solid var(--line);
-  display: grid;
-  gap: 10px;
-}
-
-.admin-active {
-  display: grid;
-  gap: 6px;
-}
-
-.active-title {
+.submission-title {
   font-weight: 600;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  color: var(--accent);
 }
 
-.active-meta,
-.active-counts {
+.submission-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.submission-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.matchup-card {
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.matchup-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.matchup-details {
+  display: grid;
+  gap: 8px;
   color: var(--muted);
   font-size: 0.95rem;
-}
-
-.span-2 {
-  grid-column: span 2;
-}
-
-.history-list {
-  margin-top: 8px;
-}
-
-@media (max-width: 900px) {
-  .admin-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .span-2 {
-    grid-column: span 1;
-  }
-
-  .form-grid,
-  .entry-grid {
-    grid-template-columns: 1fr;
-  }
 }

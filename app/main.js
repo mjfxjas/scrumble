@@ -86,23 +86,39 @@ function render() {
   const rightPct = total ? 100 - leftPct : 0;
 
   document.querySelector(".arena-header h2").textContent = state.matchup.title;
-  document.querySelector(".arena-sub").textContent = `Chattanooga - ${state.matchup.category}`;
+  document.querySelector(".arena-sub").textContent = state.matchup.category;
 
   const leftEntry = document.querySelector('[data-entry="left"]');
-  leftEntry.querySelector("h3").textContent = state.left.name;
-  leftEntry.querySelector(".entry-sub").textContent = `${state.left.neighborhood} - ${state.matchup.category}`;
+  const leftUrl = resolvePreviewUrl(state.left);
+  leftEntry.querySelector("h3").innerHTML = `
+    ${leftUrl ? `<img src="https://www.google.com/s2/favicons?domain=${new URL(leftUrl).hostname}&sz=32" class="entry-favicon" alt="" onerror="this.style.display='none'">` : ''}
+    ${state.left.name}
+  `;
+  leftEntry.querySelector(".entry-sub").innerHTML = `
+    ${state.left.neighborhood} - ${state.matchup.category}
+    ${state.left.address ? `<div class="entry-address">${state.left.address}</div>` : ''}
+    ${leftUrl ? `<a href="${leftUrl}" target="_blank" rel="noopener noreferrer" class="entry-link">${new URL(leftUrl).hostname.replace('www.', '')}</a>` : ''}
+  `;
   leftEntry.querySelector(".tag").textContent = state.left.tag || "Local";
   leftEntry.querySelector("p").textContent = state.left.blurb;
   leftEntry.querySelector(".btn").textContent = `Pick ${state.left.name.split(" ")[0]}`;
-  setEntryPreview(leftEntry, resolvePreviewUrl(state.left), state.left.name);
+  setEntryPreview(leftEntry, leftUrl, state.left.name);
 
   const rightEntry = document.querySelector('[data-entry="right"]');
-  rightEntry.querySelector("h3").textContent = state.right.name;
-  rightEntry.querySelector(".entry-sub").textContent = `${state.right.neighborhood} - ${state.matchup.category}`;
+  const rightUrl = resolvePreviewUrl(state.right);
+  rightEntry.querySelector("h3").innerHTML = `
+    ${rightUrl ? `<img src="https://www.google.com/s2/favicons?domain=${new URL(rightUrl).hostname}&sz=32" class="entry-favicon" alt="" onerror="this.style.display='none'">` : ''}
+    ${state.right.name}
+  `;
+  rightEntry.querySelector(".entry-sub").innerHTML = `
+    ${state.right.neighborhood} - ${state.matchup.category}
+    ${state.right.address ? `<div class="entry-address">${state.right.address}</div>` : ''}
+    ${rightUrl ? `<a href="${rightUrl}" target="_blank" rel="noopener noreferrer" class="entry-link">${new URL(rightUrl).hostname.replace('www.', '')}</a>` : ''}
+  `;
   rightEntry.querySelector(".tag").textContent = state.right.tag || "Local";
   rightEntry.querySelector("p").textContent = state.right.blurb;
   rightEntry.querySelector(".btn").textContent = `Pick ${state.right.name.split(" ")[0]}`;
-  setEntryPreview(rightEntry, resolvePreviewUrl(state.right), state.right.name);
+  setEntryPreview(rightEntry, rightUrl, state.right.name);
 
   document.getElementById("left-count").textContent = state.votes.left;
   document.getElementById("right-count").textContent = state.votes.right;

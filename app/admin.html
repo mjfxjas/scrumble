@@ -4,10 +4,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scrumble Admin</title>
-    <meta
-      name="description"
-      content="Scrumble admin controls for matchups and votes."
-    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,166 +14,67 @@
     <link rel="stylesheet" href="admin.css" />
   </head>
   <body>
-    <div class="page admin-page">
-      <header class="admin-hero">
-        <span class="brand-pill">Scrumble Admin</span>
-        <h1>Control Room</h1>
-        <p>Update matchups, manage the daily rumble, and keep votes moving.</p>
-        <div class="hero-meta">
-          <div><strong>API:</strong> <span id="api-base">Not set</span></div>
-          <div class="dot">Admin key stored locally</div>
-        </div>
+    <div class="page">
+      <header class="admin-header">
+        <h1 style="font-size: 2rem; margin-bottom: 10px;">SCRUMBLE ADMIN</h1>
+        <div id="admin-status" style="color: var(--muted); font-size: 0.9rem;"></div>
       </header>
 
-      <main class="admin-grid">
-        <section class="panel admin-panel">
-          <h3>Admin Access</h3>
-          <form id="admin-key-form">
-            <label class="field">
-              <span>Admin key</span>
-              <input
-                type="password"
-                id="admin-key"
-                placeholder="Enter admin key"
-                autocomplete="current-password"
-              />
-            </label>
-            <div class="field-row">
-              <button class="btn primary" type="submit">Save key</button>
-              <button class="btn ghost" type="button" id="clear-key">
-                Clear
-              </button>
-            </div>
-            <div class="tiny" id="key-status"></div>
-          </form>
-        </section>
+      <div class="admin-tabs">
+        <button class="tab-btn active" data-tab="submissions">Submissions</button>
+        <button class="tab-btn" data-tab="active">Active Matchup</button>
+        <button class="tab-btn" data-tab="history">History</button>
+        <button class="tab-btn" data-tab="settings">Settings</button>
+      </div>
 
-        <section class="panel admin-panel">
-          <h3>Active Matchup</h3>
-          <div class="admin-active">
-            <div class="active-title" id="active-title">Loading...</div>
-            <div class="active-meta" id="active-meta"></div>
-            <div class="active-counts" id="active-counts"></div>
+      <main class="admin-content">
+        <!-- Submissions Tab -->
+        <div class="tab-panel active" id="tab-submissions">
+          <div class="panel">
+            <h3>Pending Submissions</h3>
+            <div id="submissions-list" style="margin-top: 20px;"></div>
           </div>
-          <div class="field-row">
-            <button class="btn ghost" type="button" id="refresh-active">
-              Refresh
-            </button>
+        </div>
+
+        <!-- Active Matchup Tab -->
+        <div class="tab-panel" id="tab-active">
+          <div class="panel">
+            <h3>Current Active Matchup</h3>
+            <div id="active-matchup" style="margin-top: 20px;"></div>
           </div>
-        </section>
+          
+          <div class="panel" style="margin-top: 20px;">
+            <h3>Set Active Matchup</h3>
+            <form id="activate-form" style="margin-top: 20px;">
+              <input type="text" id="activate-id" placeholder="Matchup ID (e.g. m002)" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-family: inherit; margin-bottom: 12px;">
+              <button type="submit" class="btn primary">Activate</button>
+              <div id="activate-status" style="margin-top: 10px; font-size: 0.9rem;"></div>
+            </form>
+          </div>
+        </div>
 
-        <section class="panel admin-panel">
-          <h3>Set Active Matchup</h3>
-          <form id="activate-form">
-            <label class="field">
-              <span>Matchup ID</span>
-              <input
-                type="text"
-                id="activate-id"
-                placeholder="e.g. m005"
-                autocomplete="off"
-              />
-            </label>
-            <button class="btn primary" type="submit">Activate</button>
-            <div class="tiny" id="activate-status"></div>
-          </form>
-        </section>
+        <!-- History Tab -->
+        <div class="tab-panel" id="tab-history">
+          <div class="panel">
+            <h3>All Matchups</h3>
+            <div id="history-list" style="margin-top: 20px;"></div>
+          </div>
+        </div>
 
-        <section class="panel admin-panel span-2">
-          <h3>Create Matchup</h3>
-          <form id="create-form" class="admin-form">
-            <div class="form-grid">
-              <label class="field">
-                <span>Matchup ID</span>
-                <input type="text" id="matchup-id" placeholder="m006" />
-              </label>
-              <label class="field">
-                <span>Title</span>
-                <input
-                  type="text"
-                  id="matchup-title"
-                  placeholder="Best Coffee Throwdown"
-                />
-              </label>
-              <label class="field">
-                <span>Category</span>
-                <input type="text" id="matchup-category" placeholder="food" />
-              </label>
-              <label class="field checkbox">
-                <span>Set active</span>
-                <input type="checkbox" id="matchup-active" />
-              </label>
-            </div>
-
-            <div class="entry-grid">
-              <div class="entry-card">
-                <h4>Left Entry</h4>
-                <label class="field">
-                  <span>ID</span>
-                  <input type="text" id="left-id" placeholder="tremont-tavern" />
-                </label>
-                <label class="field">
-                  <span>Name</span>
-                  <input type="text" id="left-name" placeholder="Tremont Tavern" />
-                </label>
-                <label class="field">
-                  <span>Neighborhood</span>
-                  <input type="text" id="left-neighborhood" placeholder="Northshore" />
-                </label>
-                <label class="field">
-                  <span>Tag</span>
-                  <input type="text" id="left-tag" placeholder="Legend" />
-                </label>
-                <label class="field">
-                  <span>Blurb</span>
-                  <textarea id="left-blurb" rows="3"></textarea>
-                </label>
+        <!-- Settings Tab -->
+        <div class="tab-panel" id="tab-settings">
+          <div class="panel">
+            <h3>Admin Key</h3>
+            <form id="key-form" style="margin-top: 20px;">
+              <input type="password" id="admin-key" placeholder="Enter admin key" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font-family: inherit; margin-bottom: 12px;">
+              <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn primary">Save Key</button>
+                <button type="button" id="clear-key" class="btn ghost">Clear</button>
               </div>
-
-              <div class="entry-card">
-                <h4>Right Entry</h4>
-                <label class="field">
-                  <span>ID</span>
-                  <input type="text" id="right-id" placeholder="mean-mug" />
-                </label>
-                <label class="field">
-                  <span>Name</span>
-                  <input type="text" id="right-name" placeholder="Mean Mug" />
-                </label>
-                <label class="field">
-                  <span>Neighborhood</span>
-                  <input type="text" id="right-neighborhood" placeholder="Northshore" />
-                </label>
-                <label class="field">
-                  <span>Tag</span>
-                  <input type="text" id="right-tag" placeholder="Challenger" />
-                </label>
-                <label class="field">
-                  <span>Blurb</span>
-                  <textarea id="right-blurb" rows="3"></textarea>
-                </label>
-              </div>
-            </div>
-
-            <div class="field-row">
-              <button class="btn primary" type="submit">Create matchup</button>
-              <button class="btn ghost" type="button" id="fill-sample">
-                Fill sample
-              </button>
-            </div>
-            <div class="tiny" id="create-status"></div>
-          </form>
-        </section>
-
-        <section class="panel admin-panel span-2">
-          <h3>Vote Counts</h3>
-          <div class="history-list" id="admin-history"></div>
-          <div class="field-row">
-            <button class="btn ghost" type="button" id="refresh-history">
-              Refresh counts
-            </button>
+              <div id="key-status" style="margin-top: 10px; font-size: 0.9rem;"></div>
+            </form>
           </div>
-        </section>
+        </div>
       </main>
     </div>
 

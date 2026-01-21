@@ -19,30 +19,17 @@
   <body>
     <div class="page">
       <header class="hero">
-        <div class="brand">
-          <span class="brand-pill">Scenic City Rumble</span>
-          <h1>Two local legends enter. You pick the winner.</h1>
-          <p>
-            Daily head-to-heads for Chattanooga. Short lists, real taste, zero
-            tourist fluff.
-          </p>
-          <div class="hero-actions">
-            <button class="btn primary" data-scroll="arena">Vote now</button>
-            <button class="btn ghost">Submit a matchup</button>
-          </div>
-          <div class="hero-meta">
-            <div>
-              <strong>Today:</strong> Burger joints - 684 votes - Updated just now
-            </div>
-            <div class="dot">Open until 10:00 PM</div>
-          </div>
+        <h1 class="hero-title">
+          <span class="hero-word hero-word-1">SCENIC</span>
+          <span class="hero-word hero-word-2">CITY</span>
+          <span class="hero-word hero-word-3">RUMBLE</span>
+        </h1>
+        <div class="hero-actions">
+          <button id="eva-toggle" class="btn ghost" style="font-size: 0.8rem;">⚠️ NERV MODE</button>
+          <button class="btn primary" data-scroll="arena">VOTE NOW</button>
+          <a href="submit.html" class="btn ghost" style="text-decoration: none; line-height: 2.2;">SUBMIT A MATCHUP</a>
+          <button class="btn ghost">FUTURE MATCHUPS</button>
         </div>
-        <aside class="hero-card">
-          <div class="card-label">Tonight's Rumble</div>
-          <div class="card-title" id="hero-matchup">Tremont Tavern vs Main St Meats</div>
-          <div class="card-meta" id="hero-meta">Downtown - Food - 18 minutes left</div>
-          <div class="card-cta">Pick a champ</div>
-        </aside>
       </header>
 
       <main>
@@ -50,10 +37,12 @@
           <div class="arena-header">
             <div>
               <h2>Today's Rumble</h2>
-              <div class="arena-sub" id="matchup-sub">Chattanooga - Food</div>
+              <div class="arena-sub" id="matchup-sub">Food</div>
             </div>
             <div class="arena-badge">Live</div>
           </div>
+
+          <div style="text-align: center; font-size: 80px; margin: 20px 0;">🍔</div>
 
           <div class="matchup">
             <article class="entry" data-entry="left">
@@ -140,5 +129,10 @@
 
     <script src="config.js"></script>
     <script src="main.js"></script>
+    <script>
+      document.getElementById('eva-toggle').addEventListener('click', () => {
+        document.body.classList.toggle('eva-theme');
+      });
+    </script>
   </body>
 </html>

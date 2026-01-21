@@ -6,7 +6,9 @@
       "blurb": "Char-grilled, loud, and zero pretense. The kind of place you go back to when you want it done right.",
       "neighborhood": "Northshore",
       "category": "food",
-      "tag": "Legend"
+      "tag": "Legend",
+      "url": "https://tremonttavern.com",
+      "address": "1112 Tremont St"
     },
     {
       "id": "main-st-meats",
@@ -14,7 +16,9 @@
       "blurb": "A slicker bite with serious smoke and a menu that always feels one step ahead.",
       "neighborhood": "Southside",
       "category": "food",
-      "tag": "Challenger"
+      "tag": "Challenger",
+      "url": "https://mainstreetmeats.com",
+      "address": "2011 Main St"
     },
     {
       "id": "mean-mug",
@@ -22,7 +26,9 @@
       "blurb": "Strong coffee, no fuss. The spot where locals actually work and the vibe stays chill.",
       "neighborhood": "Southside",
       "category": "coffee",
-      "tag": "Local"
+      "tag": "Local",
+      "url": "https://meanmugcoffeeco.com",
+      "address": "1201 Market St"
     },
     {
       "id": "velo",
@@ -30,7 +36,9 @@
       "blurb": "Bright, clean, and always dialed in. Third-wave done right without the attitude.",
       "neighborhood": "Northshore",
       "category": "coffee",
-      "tag": "Favorite"
+      "tag": "Favorite",
+      "url": "https://velocoffee.com",
+      "address": "35 Frazier Ave"
     },
     {
       "id": "sunset-rock",
