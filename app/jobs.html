@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>We're Hiring - Scrumble</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-brand">SCRUMBLE</div>
+      <button class="navbar-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="navbar-menu">
+        <li><a href="index.html#arena">Vote</a></li>
+        <li><a href="submit.html">Submit</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="jobs.html">Jobs</a></li>
+        <li><button class="theme-toggle" type="button" aria-label="Cycle theme">Theme</button></li>
+      </ul>
+    </nav>
+    <div class="page">
+      <header class="hero">
+        <h1 class="hero-title" style="font-size: 3rem; margin-bottom: 20px;">
+          <span>WE'RE HIRING</span>
+        </h1>
+        <p style="max-width: 600px; margin: 0 auto 40px; color: var(--muted);">
+          Ground floor. Build something people actually use.
+        </p>
+      </header>
+
+      <main>
+        <section style="max-width: 700px; margin: 0 auto; display: grid; gap: 20px;">
+          <div class="panel">
+            <h4>Copywriter</h4>
+            <p style="margin-top: 12px;">
+              Write the words that make people care. Matchup descriptions, social posts, the voice of the thing. 
+              You know how to make boring sound interesting and interesting sound essential.
+            </p>
+            <p style="margin-top: 12px; color: var(--ink);">
+              Early. Equity. Remote-friendly.
+            </p>
+          </div>
+
+          <div class="panel">
+            <h4>Developer</h4>
+            <p style="margin-top: 12px;">
+              Ship fast, break nothing. Python, JavaScript, AWS. You've built things people use and you want to do it again, 
+              but this time from the start.
+            </p>
+            <p style="margin-top: 12px; color: var(--ink);">
+              Early. Equity. Remote-friendly.
+            </p>
+          </div>
+
+          <div class="panel" style="text-align: center; background: var(--bg); border: 2px solid var(--nav-accent);">
+            <p style="color: var(--nav-accent); font-weight: 600;">
+              Interested? Email us: <a href="mailto:jobs@scrumble.cc" style="color: var(--nav-accent); text-decoration: underline;">jobs@scrumble.cc</a>
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="theme.js"></script>
+    <script>
+      const navToggle = document.querySelector('.navbar-toggle');
+      const navMenu = document.querySelector('.navbar-menu');
+      
+      if (navToggle && navMenu) {
+        navToggle.addEventListener('click', () => {
+          navToggle.classList.toggle('active');
+          navMenu.classList.toggle('active');
+        });
+        
+        navMenu.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

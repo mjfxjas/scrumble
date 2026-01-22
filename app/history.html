@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>History - Scrumble</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-brand">SCRUMBLE</div>
+      <button class="navbar-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="navbar-menu">
+        <li><a href="index.html#arena">Vote</a></li>
+        <li><a href="submit.html">Submit</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="jobs.html">Jobs</a></li>
+        <li><button class="theme-toggle" type="button" aria-label="Cycle theme">Theme</button></li>
+      </ul>
+    </nav>
+    <div class="page">
+      <header class="hero">
+        <h1 class="hero-title" style="font-size: 3rem;">
+          <span>PAST BRAWLS</span>
+        </h1>
+      </header>
+
+      <main>
+        <section class="history-section">
+          <div class="history-list" id="history-list">
+            <div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Loading history...</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="theme.js"></script>
+    <script>
+      const API_BASE = (window.SCRUMBLE_API_BASE || "").trim();
+      const API_URL = API_BASE.endsWith("/") ? API_BASE.slice(0, -1) : API_BASE;
+
+      async function loadHistory() {
+        if (!API_URL) return;
+        
+        try {
+          const resp = await fetch(`${API_URL}/history`);
+          const data = await resp.json();
+          
+          const list = document.getElementById('history-list');
+          if (!data.history || data.history.length === 0) {
+            list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">No past brawls yet</div>';
+            return;
+          }
+          
+          list.innerHTML = data.history.filter(h => !h.active).map(h => {
+            const leftWon = h.votes.left > h.votes.right;
+            const total = h.votes.left + h.votes.right;
+            return `
+              <div class="history-item">
+                <div class="history-matchup">
+                  <div class="history-title">${h.title}</div>
+                  <div class="history-meta">${h.category} • ${total} votes</div>
+                </div>
+                <div class="history-result">
+                  <div class="history-winner">${leftWon ? h.left.name : h.right.name} ${leftWon ? h.votes.left : h.votes.right}</div>
+                  <div class="history-loser">${leftWon ? h.right.name : h.left.name} ${leftWon ? h.votes.right : h.votes.left}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } catch (err) {
+          console.error('Failed to load history:', err);
+        }
+      }
+
+      const navToggle = document.querySelector('.navbar-toggle');
+      const navMenu = document.querySelector('.navbar-menu');
+      
+      if (navToggle && navMenu) {
+        navToggle.addEventListener('click', () => {
+          navToggle.classList.toggle('active');
+          navMenu.classList.toggle('active');
+        });
+        
+        navMenu.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+          });
+        });
+      }
+
+      loadHistory();
+    </script>
+  </body>
+</html>

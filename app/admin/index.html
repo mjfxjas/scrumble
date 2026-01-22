@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scrumble Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/admin.css" />
+  </head>
+  <body>
+    <div class="auth-shell" id="auth-shell">
+      <div class="auth-card">
+        <div class="auth-brand">Scrumble Admin</div>
+        <div class="auth-sub">Sign in to manage matchups.</div>
+        <form id="login-form">
+          <label class="auth-label" for="admin-key">Admin key</label>
+          <input type="password" id="admin-key" placeholder="Enter admin key" autocomplete="current-password" required />
+          <button type="submit" class="btn primary">Log in</button>
+        </form>
+        <div id="auth-error" class="auth-error" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="admin-page" id="admin-app" hidden>
+      <header class="admin-header">
+        <div>
+          <h1>Scrumble Admin</h1>
+          <div id="auth-status"></div>
+        </div>
+        <button class="btn ghost" id="logout-btn" type="button">Log out</button>
+      </header>
+
+      <nav class="admin-tabs">
+        <button class="tab-btn active" data-tab="matchups">Matchups</button>
+        <button class="tab-btn" data-tab="submissions">Submissions</button>
+      </nav>
+
+      <main class="admin-main">
+        <section id="tab-matchups" class="tab-panel active">
+          <div id="matchups-list"></div>
+        </section>
+
+        <section id="tab-submissions" class="tab-panel">
+          <div id="submissions-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/config.js"></script>
+    <script src="/admin.js"></script>
+  </body>
+</html>

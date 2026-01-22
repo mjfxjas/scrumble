@@ -21,88 +21,52 @@
       "address": "2011 Main St"
     },
     {
-      "id": "mean-mug",
-      "name": "Mean Mug",
-      "blurb": "Strong coffee, no fuss. The spot where locals actually work and the vibe stays chill.",
-      "neighborhood": "Southside",
-      "category": "coffee",
-      "tag": "Local",
-      "url": "https://meanmugcoffeeco.com",
-      "address": "1201 Market St"
+      "id": "andy-berke",
+      "name": "Andy Berke",
+      "blurb": "Mayor 2013-2021. Brought tech jobs and the Gig to Chattanooga.",
+      "neighborhood": "Downtown",
+      "category": "politics",
+      "tag": "Contender"
     },
     {
-      "id": "velo",
-      "name": "Velo Coffee",
-      "blurb": "Bright, clean, and always dialed in. Third-wave done right without the attitude.",
-      "neighborhood": "Northshore",
-      "category": "coffee",
-      "tag": "Favorite",
-      "url": "https://velocoffee.com",
-      "address": "35 Frazier Ave"
+      "id": "bob-corker",
+      "name": "Bob Corker",
+      "blurb": "Mayor 2001-2005. Revitalized downtown before heading to the Senate.",
+      "neighborhood": "Downtown",
+      "category": "politics",
+      "tag": "Legend"
     },
     {
-      "id": "sunset-rock",
-      "name": "Sunset Rock",
-      "blurb": "The classic overlook. Short hike, big payoff, and you'll share it with half the city on a good night.",
-      "neighborhood": "Lookout Mountain",
-      "category": "outdoors",
-      "tag": "Icon"
+      "id": "nightfall-concerts",
+      "name": "Nightfall",
+      "blurb": "Free downtown concert series with big crowds and bigger vibes.",
+      "neighborhood": "Downtown",
+      "category": "music",
+      "tag": "Weekly"
     },
     {
-      "id": "renaissance-park",
-      "name": "Renaissance Park",
-      "blurb": "River views, open trails, and way fewer crowds. The locals' pick when Sunset feels too busy.",
-      "neighborhood": "Northshore",
-      "category": "outdoors",
-      "tag": "Hidden"
+      "id": "riverbend-fest",
+      "name": "Riverbend",
+      "blurb": "Festival nights with a packed lineup and riverfront energy.",
+      "neighborhood": "Riverfront",
+      "category": "music",
+      "tag": "Headliner"
     },
     {
-      "id": "honest-pint",
-      "name": "Honest Pint",
-      "blurb": "Craft beer, zero pretense, and a patio that feels like your friend's backyard.",
-      "neighborhood": "Southside",
-      "category": "drinks",
-      "tag": "Classic"
-    },
-    {
-      "id": "hair-of-the-dog",
-      "name": "Hair of the Dog",
-      "blurb": "Dive bar energy with a killer tap list. Late nights, loud music, good people.",
-      "neighborhood": "Southside",
-      "category": "drinks",
-      "tag": "Dive"
-    },
-    {
-      "id": "taco-mamacita",
-      "name": "Taco Mamacita",
-      "blurb": "Upscale tacos with a scene. Great for groups, even better for margaritas.",
-      "neighborhood": "Southside",
-      "category": "food",
-      "tag": "Popular"
-    },
-    {
-      "id": "taqueria-jalisco",
-      "name": "Taqueria Jalisco",
-      "blurb": "No frills, all flavor. The real deal for tacos, tortas, and authenticity.",
-      "neighborhood": "East Ridge",
-      "category": "food",
-      "tag": "Authentic"
-    },
-    {
-      "id": "rembrandt",
-      "name": "Rembrandt's",
-      "blurb": "Cozy, romantic, and consistently excellent. The date night standard.",
-      "neighborhood": "Southside",
-      "category": "food",
-      "tag": "Upscale"
-    },
-    {
-      "id": "st-johns",
-      "name": "St. John's",
-      "blurb": "Farm-to-table done with soul. Seasonal menu, warm vibe, worth the wait.",
+      "id": "late-night-diner",
+      "name": "Late Night Diner",
+      "blurb": "Greasy spoon that saves the night after 11.",
       "neighborhood": "Northshore",
       "category": "food",
-      "tag": "Elevated"
+      "tag": "After Hours"
+    },
+    {
+      "id": "food-truck-row",
+      "name": "Food Truck Row",
+      "blurb": "Rotating trucks, instant decisions, zero regrets.",
+      "neighborhood": "Southside",
+      "category": "food",
+      "tag": "Wildcard"
     }
   ],
   "matchups": [
@@ -112,39 +76,43 @@
       "left_entry_id": "tremont-tavern",
       "right_entry_id": "main-st-meats",
       "category": "Food",
-      "active": true
+      "active": true,
+      "cadence": "daily",
+      "starts_at": "2026-01-20T00:00:00Z",
+      "ends_at": "2026-02-01T00:00:00Z"
     },
     {
-      "id": "m002",
-      "title": "Coffee Clash",
-      "left_entry_id": "mean-mug",
-      "right_entry_id": "velo",
-      "category": "Coffee",
-      "active": false
+      "id": "mayor-eternal",
+      "title": "Best Former Mayor",
+      "left_entry_id": "andy-berke",
+      "right_entry_id": "bob-corker",
+      "category": "Politics",
+      "active": true,
+      "cadence": "weekly",
+      "starts_at": "2026-01-20T00:00:00Z",
+      "ends_at": "2026-02-15T00:00:00Z"
     },
     {
-      "id": "m003",
-      "title": "Sunset Showdown",
-      "left_entry_id": "sunset-rock",
-      "right_entry_id": "renaissance-park",
-      "category": "Outdoors",
-      "active": false
+      "id": "weekly-001",
+      "title": "Friday Night Energy",
+      "left_entry_id": "nightfall-concerts",
+      "right_entry_id": "riverbend-fest",
+      "category": "Music",
+      "active": true,
+      "cadence": "weekly",
+      "starts_at": "2026-01-22T00:00:00Z",
+      "ends_at": "2026-02-28T00:00:00Z"
     },
     {
-      "id": "m004",
-      "title": "Taco Throwdown",
-      "left_entry_id": "taco-mamacita",
-      "right_entry_id": "taqueria-jalisco",
+      "id": "flash-001",
+      "title": "Late Night Cravings",
+      "left_entry_id": "late-night-diner",
+      "right_entry_id": "food-truck-row",
       "category": "Food",
-      "active": false
-    },
-    {
-      "id": "m005",
-      "title": "Date Night Duel",
-      "left_entry_id": "rembrandt",
-      "right_entry_id": "st-johns",
-      "category": "Food",
-      "active": false
+      "active": true,
+      "cadence": "flash",
+      "starts_at": "2026-01-22T18:00:00Z",
+      "ends_at": "2026-01-23T06:00:00Z"
     }
   ]
 }

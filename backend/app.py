@@ -1,7 +1,7 @@
 import json
 import os
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 dynamodb = boto3.resource('dynamodb')
@@ -15,6 +15,20 @@ def decimal_default(obj):
 
 def json_response(status_code, headers, body):
     return {'statusCode': status_code, 'headers': headers, 'body': json.dumps(body, default=decimal_default)}
+
+def parse_iso8601(value):
+    if not value:
+        return None
+    try:
+        text = value.strip()
+        if text.endswith('Z'):
+            text = text[:-1] + '+00:00'
+        dt = datetime.fromisoformat(text)
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except ValueError:
+        return None
 
 def get_header(event, name):
     headers = event.get('headers') or {}
@@ -50,7 +64,7 @@ def handler(event, context):
     headers = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+        'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
         'Access-Control-Allow-Headers': '*'
     }
     
@@ -65,6 +79,16 @@ def handler(event, context):
         elif path == '/vote' and method == 'POST':
             body = json.loads(event.get('body', '{}'))
             return cast_vote(body, headers)
+        elif path == '/admin/login' and method == 'POST':
+            allowed, failure = require_admin(event, headers)
+            if not allowed:
+                return failure
+            return json_response(200, headers, {'ok': True})
+        elif path == '/admin/matchups' and method == 'GET':
+            allowed, failure = require_admin(event, headers)
+            if not allowed:
+                return failure
+            return get_admin_matchups(headers)
         elif path == '/admin/activate' and method == 'POST':
             allowed, failure = require_admin(event, headers)
             if not allowed:
@@ -85,44 +109,52 @@ def handler(event, context):
             if not allowed:
                 return failure
             return get_submissions(headers)
+        elif path.startswith('/admin/matchup/') and method == 'PATCH':
+            allowed, failure = require_admin(event, headers)
+            if not allowed:
+                return failure
+            matchup_id = path.split('/')[-1]
+            body = parse_body(event)
+            return update_matchup(matchup_id, body, headers)
+        elif path.startswith('/admin/matchup/') and path.endswith('/reset-votes') and method == 'POST':
+            allowed, failure = require_admin(event, headers)
+            if not allowed:
+                return failure
+            matchup_id = path.split('/')[-2]
+            return reset_votes(matchup_id, headers)
         else:
             return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Not found'})}
     except Exception as e:
         return {'statusCode': 500, 'headers': headers, 'body': json.dumps({'error': str(e)})}
 
-def get_active_matchup(headers):
-    resp = table.get_item(Key={'pk': 'MATCHUP', 'sk': 'ACTIVE'})
-    if 'Item' not in resp:
-        return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'No active matchup'})}
-    
-    matchup = resp['Item']
-    left_id = matchup['left_entry_id']
-    right_id = matchup['right_entry_id']
-    
-    left = table.get_item(Key={'pk': 'ENTRY', 'sk': left_id})['Item']
-    right = table.get_item(Key={'pk': 'ENTRY', 'sk': right_id})['Item']
-    
+def build_matchup_payload(matchup):
+    left = table.get_item(Key={'pk': 'ENTRY', 'sk': matchup['left_entry_id']})['Item']
+    right = table.get_item(Key={'pk': 'ENTRY', 'sk': matchup['right_entry_id']})['Item']
+
     vote_resp = table.get_item(Key={'pk': f"VOTES#{matchup['id']}", 'sk': 'TOTAL'})
     votes = vote_resp.get('Item', {'left': 0, 'right': 0})
-    
-    # Boost votes with base + time-based growth
+
     import time
     base_boost = 150
     hours_since_epoch = int(time.time()) // 3600
-    time_boost_left = (hours_since_epoch * 3) % 7  # 0-6 votes per hour
-    time_boost_right = (hours_since_epoch * 2) % 5  # 0-4 votes per hour
-    
-    result = {
+    time_boost_left = (hours_since_epoch * 3) % 7
+    time_boost_right = (hours_since_epoch * 2) % 5
+
+    return {
         'matchup': {
             'id': matchup['id'],
             'title': matchup['title'],
-            'category': matchup['category']
+            'category': matchup['category'],
+            'cadence': matchup.get('cadence', ''),
+            'starts_at': matchup.get('starts_at', ''),
+            'ends_at': matchup.get('ends_at', ''),
+            'message': matchup.get('message', '')
         },
         'left': {
             'id': left['id'],
             'name': left['name'],
-            'blurb': left['blurb'],
-            'neighborhood': left['neighborhood'],
+            'blurb': left.get('blurb', ''),
+            'neighborhood': left.get('neighborhood', ''),
             'tag': left.get('tag', 'Local'),
             'url': left.get('url', ''),
             'image_url': left.get('image_url', ''),
@@ -131,8 +163,8 @@ def get_active_matchup(headers):
         'right': {
             'id': right['id'],
             'name': right['name'],
-            'blurb': right['blurb'],
-            'neighborhood': right['neighborhood'],
+            'blurb': right.get('blurb', ''),
+            'neighborhood': right.get('neighborhood', ''),
             'tag': right.get('tag', 'Local'),
             'url': right.get('url', ''),
             'image_url': right.get('image_url', ''),
@@ -143,8 +175,36 @@ def get_active_matchup(headers):
             'right': int(votes.get('right', 0)) + base_boost + time_boost_right
         }
     }
-    
-    return {'statusCode': 200, 'headers': headers, 'body': json.dumps(result, default=decimal_default)}
+
+def get_matchups(headers, apply_time_window=True):
+    resp = table.query(
+        KeyConditionExpression='pk = :pk',
+        FilterExpression='active = :active',
+        ExpressionAttributeValues={':pk': 'MATCHUP', ':active': True}
+    )
+
+    now = datetime.now(timezone.utc)
+    matchups = []
+    for matchup in resp.get('Items', []):
+        if matchup['sk'] == 'ACTIVE':
+            continue
+        if apply_time_window:
+            starts_at = parse_iso8601(matchup.get('starts_at', ''))
+            ends_at = parse_iso8601(matchup.get('ends_at', ''))
+            if starts_at and now < starts_at:
+                continue
+            if ends_at and now > ends_at:
+                continue
+
+        matchups.append(build_matchup_payload(matchup))
+
+    return {'statusCode': 200, 'headers': headers, 'body': json.dumps({'matchups': matchups}, default=decimal_default)}
+
+def get_active_matchup(headers):
+    return get_matchups(headers, apply_time_window=True)
+
+def get_admin_matchups(headers):
+    return get_matchups(headers, apply_time_window=False)
 
 def cast_vote(body, headers):
     matchup_id = body.get('matchup_id')
@@ -153,6 +213,20 @@ def cast_vote(body, headers):
     
     if not matchup_id or side not in ['left', 'right']:
         return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Invalid vote'})}
+
+    matchup = table.get_item(Key={'pk': 'MATCHUP', 'sk': matchup_id}).get('Item')
+    if not matchup:
+        return {'statusCode': 404, 'headers': headers, 'body': json.dumps({'error': 'Matchup not found'})}
+    if not matchup.get('active', False):
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Matchup not active'})}
+
+    now = datetime.now(timezone.utc)
+    starts_at = parse_iso8601(matchup.get('starts_at', ''))
+    ends_at = parse_iso8601(matchup.get('ends_at', ''))
+    if starts_at and now < starts_at:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Matchup not started'})}
+    if ends_at and now > ends_at:
+        return {'statusCode': 400, 'headers': headers, 'body': json.dumps({'error': 'Matchup ended'})}
     
     vote_key = {'pk': f"VOTES#{matchup_id}", 'sk': 'TOTAL'}
     
@@ -270,6 +344,10 @@ def create_matchup(body, headers):
     left_entry_id = payload.get('left_entry_id')
     right_entry_id = payload.get('right_entry_id')
     is_active = bool(payload.get('active', False))
+    cadence = payload.get('cadence', '')
+    starts_at = payload.get('starts_at', '')
+    ends_at = payload.get('ends_at', '')
+    message = payload.get('message', '')
 
     left_entry = body.get('left')
     right_entry = body.get('right')
@@ -304,7 +382,11 @@ def create_matchup(body, headers):
         'left_entry_id': left_entry_id,
         'right_entry_id': right_entry_id,
         'category': category,
-        'active': is_active
+        'active': is_active,
+        'cadence': cadence,
+        'starts_at': starts_at,
+        'ends_at': ends_at,
+        'message': message
     })
 
     vote_key = {'pk': f"VOTES#{matchup_id}", 'sk': 'TOTAL'}
@@ -369,3 +451,65 @@ def get_submissions(headers):
         })
     
     return json_response(200, headers, {'submissions': submissions})
+
+def update_matchup(matchup_id, body, headers):
+    if not matchup_id:
+        return json_response(400, headers, {'error': 'matchup_id required'})
+    
+    update_expr = []
+    expr_values = {}
+    expr_names = {}
+    
+    if 'ends_at' in body:
+        update_expr.append('#ends_at = :ends_at')
+        expr_values[':ends_at'] = body['ends_at']
+        expr_names['#ends_at'] = 'ends_at'
+
+    if 'starts_at' in body:
+        update_expr.append('#starts_at = :starts_at')
+        expr_values[':starts_at'] = body['starts_at']
+        expr_names['#starts_at'] = 'starts_at'
+
+    if 'cadence' in body:
+        update_expr.append('#cadence = :cadence')
+        expr_values[':cadence'] = body['cadence']
+        expr_names['#cadence'] = 'cadence'
+    
+    if 'message' in body:
+        update_expr.append('#message = :message')
+        expr_values[':message'] = body['message']
+        expr_names['#message'] = 'message'
+    
+    if 'active' in body:
+        update_expr.append('#active = :active')
+        expr_values[':active'] = bool(body['active'])
+        expr_names['#active'] = 'active'
+    
+    if not update_expr:
+        return json_response(400, headers, {'error': 'No fields to update'})
+    
+    try:
+        table.update_item(
+            Key={'pk': 'MATCHUP', 'sk': matchup_id},
+            UpdateExpression='SET ' + ', '.join(update_expr),
+            ExpressionAttributeValues=expr_values,
+            ExpressionAttributeNames=expr_names
+        )
+        return json_response(200, headers, {'ok': True})
+    except Exception as e:
+        return json_response(500, headers, {'error': str(e)})
+
+def reset_votes(matchup_id, headers):
+    if not matchup_id:
+        return json_response(400, headers, {'error': 'matchup_id required'})
+    
+    try:
+        table.put_item(Item={
+            'pk': f"VOTES#{matchup_id}",
+            'sk': 'TOTAL',
+            'left': 0,
+            'right': 0
+        })
+        return json_response(200, headers, {'ok': True})
+    except Exception as e:
+        return json_response(500, headers, {'error': str(e)})

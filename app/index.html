@@ -17,6 +17,23 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <nav class="navbar">
+      <div class="navbar-brand">SCRUMBLE</div>
+      <div class="navbar-time" style="opacity: 0; transition: opacity 0.3s ease; color: var(--nav-accent); font-size: 0.9rem; font-weight: 500;"></div>
+      <button class="navbar-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="navbar-menu">
+        <li><a href="#arena">Vote</a></li>
+        <li><a href="submit.html">Submit</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="jobs.html">Jobs</a></li>
+        <li><button class="theme-toggle" type="button" aria-label="Cycle theme">Theme</button></li>
+      </ul>
+    </nav>
     <div class="page">
       <header class="hero">
         <h1 class="hero-title">
@@ -25,10 +42,9 @@
           <span class="hero-word hero-word-3">RUMBLE</span>
         </h1>
         <div class="hero-actions">
-          <button id="eva-toggle" class="btn ghost" style="font-size: 0.8rem;">⚠️ NERV MODE</button>
-          <button class="btn primary" data-scroll="arena">VOTE NOW</button>
-          <a href="submit.html" class="btn ghost" style="text-decoration: none; line-height: 2.2;">SUBMIT A MATCHUP</a>
-          <button class="btn ghost">FUTURE MATCHUPS</button>
+          <button class="btn primary" data-scroll="arena" data-text="VOTE NOW">VOTE NOW</button>
+          <a href="submit.html" class="btn ghost" style="text-decoration: none; line-height: 2.2;" data-text="SUBMIT A MATCHUP">SUBMIT A MATCHUP</a>
+          <button class="btn ghost" data-text="FUTURE MATCHUPS">FUTURE MATCHUPS</button>
         </div>
       </header>
 
@@ -36,60 +52,13 @@
         <section class="arena" id="arena">
           <div class="arena-header">
             <div>
-              <h2>Today's Rumble</h2>
-              <div class="arena-sub" id="matchup-sub">Food</div>
+              <h2>Today's Matchups</h2>
             </div>
             <div class="arena-badge">Live</div>
           </div>
 
-          <div style="text-align: center; font-size: 80px; margin: 20px 0;">🍔</div>
-
-          <div class="matchup">
-            <article class="entry" data-entry="left">
-              <div class="entry-preview" aria-hidden="true"></div>
-              <div class="entry-top">
-                <div>
-                  <h3 id="left-name">Tremont Tavern</h3>
-                  <div class="entry-sub" id="left-sub">Northshore - Burgers</div>
-                </div>
-                <span class="tag">Legend</span>
-              </div>
-              <p id="left-blurb">
-                Char-grilled, loud, and zero pretense. The kind of place you go
-                back to when you want it done right.
-              </p>
-              <div class="entry-actions">
-                <button class="btn vote" data-side="left">Pick Tremont</button>
-                <div class="score">
-                  <span class="count" id="left-count">128</span>
-                  <span class="pct" id="left-pct">54%</span>
-                </div>
-              </div>
-            </article>
-
-            <div class="vs">VS</div>
-
-            <article class="entry" data-entry="right">
-              <div class="entry-preview" aria-hidden="true"></div>
-              <div class="entry-top">
-                <div>
-                  <h3 id="right-name">Main St Meats</h3>
-                  <div class="entry-sub" id="right-sub">Southside - Smokehouse</div>
-                </div>
-                <span class="tag">Challenger</span>
-              </div>
-              <p id="right-blurb">
-                A slicker bite with serious smoke and a menu that always feels
-                one step ahead.
-              </p>
-              <div class="entry-actions">
-                <button class="btn vote" data-side="right">Pick Main St</button>
-                <div class="score">
-                  <span class="count" id="right-count">109</span>
-                  <span class="pct" id="right-pct">46%</span>
-                </div>
-              </div>
-            </article>
+          <div class="matchup-container" id="matchup-container">
+            <div class="tiny" id="matchup-empty" style="text-align: center; padding: 20px; color: var(--muted);">Loading matchups...</div>
           </div>
 
           <div class="arena-footer">
@@ -112,27 +81,22 @@
             <p>Submit a matchup and we will get it in the ring.</p>
           </article>
         </section>
-
-        <section class="history-section" id="history">
-          <h3>Past Brawls</h3>
-          <div class="history-list" id="history-list">
-            <div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Loading history...</div>
-          </div>
-        </section>
       </main>
 
       <footer>
         <div>Scenic City Rumble - Chattanooga, TN</div>
-        <div>scrumble.dev</div>
+        <div>scrumble.cc</div>
       </footer>
     </div>
 
+    <div class="sticky-vote" id="sticky-vote">
+      <button class="btn primary sticky-vote-btn" id="sticky-vote-btn" data-text="VOTE NOW">VOTE NOW</button>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
     <script src="config.js"></script>
+    <script src="theme.js"></script>
     <script src="main.js"></script>
-    <script>
-      document.getElementById('eva-toggle').addEventListener('click', () => {
-        document.body.classList.toggle('eva-theme');
-      });
-    </script>
   </body>
 </html>

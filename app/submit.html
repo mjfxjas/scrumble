@@ -13,6 +13,22 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <nav class="navbar">
+      <div class="navbar-brand">SCRUMBLE</div>
+      <button class="navbar-toggle" aria-label="Toggle menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <ul class="navbar-menu">
+        <li><a href="index.html#arena">Vote</a></li>
+        <li><a href="submit.html">Submit</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="jobs.html">Jobs</a></li>
+        <li><button class="theme-toggle" type="button" aria-label="Cycle theme">Theme</button></li>
+      </ul>
+    </nav>
     <div class="page">
       <header class="hero">
         <h1 class="hero-title" style="font-size: 3rem; margin-bottom: 20px;">
@@ -64,50 +80,109 @@
                 <a href="index.html" class="btn ghost" style="flex: 1; text-align: center; line-height: 2.2;">Cancel</a>
               </div>
 
-              <div id="status" style="text-align: center; font-size: 0.9rem;"></div>
+              <div id="status" style="text-align: center; font-size: 0.9rem;" aria-live="polite"></div>
             </div>
           </form>
+          <div id="submit-confirmation" class="submit-confirmation" hidden>
+            <div class="submit-confirmation-icon">✓</div>
+            <h2>Submission received</h2>
+            <p>Thanks for the tip. We'll review it and add the best matchups.</p>
+            <div class="submit-confirmation-details">
+              <div class="submit-confirmation-row">
+                <span>Entry 1</span>
+                <strong id="confirm-left"></strong>
+              </div>
+              <div class="submit-confirmation-row">
+                <span>Entry 2</span>
+                <strong id="confirm-right"></strong>
+              </div>
+              <div class="submit-confirmation-row">
+                <span>Category</span>
+                <strong id="confirm-category"></strong>
+              </div>
+            </div>
+            <div class="submit-confirmation-actions">
+              <button type="button" id="submit-another" class="btn ghost">Submit Another</button>
+              <a href="index.html" class="btn primary" style="text-align: center; line-height: 2.2;">Back to Vote</a>
+            </div>
+          </div>
         </section>
       </main>
     </div>
 
     <script src="config.js"></script>
+    <script src="theme.js"></script>
     <script>
       const API_BASE = (window.SCRUMBLE_API_BASE || "").trim();
       const API_URL = API_BASE.endsWith("/") ? API_BASE.slice(0, -1) : API_BASE;
 
-      document.getElementById('submit-form').addEventListener('submit', async (e) => {
+      const form = document.getElementById('submit-form');
+      const status = document.getElementById('status');
+      const confirmation = document.getElementById('submit-confirmation');
+      const confirmLeft = document.getElementById('confirm-left');
+      const confirmRight = document.getElementById('confirm-right');
+      const confirmCategory = document.getElementById('confirm-category');
+      const submitAnother = document.getElementById('submit-another');
+
+      function showConfirmation(data) {
+        confirmLeft.textContent = data.left_name;
+        confirmRight.textContent = data.right_name;
+        confirmCategory.textContent = data.category_label;
+        form.hidden = true;
+        confirmation.hidden = false;
+        confirmation.classList.add('show');
+      }
+
+      function resetConfirmation() {
+        confirmation.hidden = true;
+        confirmation.classList.remove('show');
+        form.hidden = false;
+        status.textContent = '';
+      }
+
+      submitAnother.addEventListener('click', () => {
+        resetConfirmation();
+        form.reset();
+        document.getElementById('left-name').focus();
+      });
+
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const status = document.getElementById('status');
+
         const btn = e.target.querySelector('button[type="submit"]');
-        
+        const categorySelect = document.getElementById('category');
+        const payload = {
+          left_name: document.getElementById('left-name').value.trim(),
+          right_name: document.getElementById('right-name').value.trim(),
+          category: categorySelect.value,
+          category_label: categorySelect.options[categorySelect.selectedIndex]?.text || categorySelect.value,
+          email: document.getElementById('email').value.trim(),
+          reason: document.getElementById('reason').value.trim()
+        };
+
         btn.disabled = true;
         btn.textContent = 'Submitting...';
         status.textContent = '';
-        
+
         try {
           const resp = await fetch(`${API_URL}/submit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              left_name: document.getElementById('left-name').value,
-              right_name: document.getElementById('right-name').value,
-              category: document.getElementById('category').value,
-              email: document.getElementById('email').value,
-              reason: document.getElementById('reason').value
+              left_name: payload.left_name,
+              right_name: payload.right_name,
+              category: payload.category,
+              email: payload.email,
+              reason: payload.reason
             })
           });
-          
+
           if (!resp.ok) throw new Error('Submission failed');
-          
+
           status.style.color = 'var(--accent)';
-          status.textContent = '✓ Submitted! We'll review it soon.';
+          status.textContent = '✓ Submitted! We\'ll review it soon.';
           e.target.reset();
-          
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 2000);
+          showConfirmation(payload);
         } catch (err) {
           status.style.color = 'var(--accent)';
           status.textContent = 'Error: ' + err.message;
@@ -116,6 +191,23 @@
           btn.textContent = 'Submit Matchup';
         }
       });
+      
+      const navToggle = document.querySelector('.navbar-toggle');
+      const navMenu = document.querySelector('.navbar-menu');
+      
+      if (navToggle && navMenu) {
+        navToggle.addEventListener('click', () => {
+          navToggle.classList.toggle('active');
+          navMenu.classList.toggle('active');
+        });
+        
+        navMenu.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+            navToggle.classList.remove('active');
+            navMenu.classList.remove('active');
+          });
+        });
+      }
     </script>
   </body>
 </html>
