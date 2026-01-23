@@ -4,10 +4,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scenic City Rumble</title>
+    <link rel="icon" type="image/x-icon" href="public/scrumble_favicon.ico" />
     <meta
       name="description"
       content="Two local favorites enter. You pick the winner."
     />
+    
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Scenic City Rumble" />
+    <meta property="og:description" content="Two local favorites enter. You pick the winner. Vote on Chattanooga's best food, music, and local gems." />
+    <meta property="og:url" content="https://scrumble.cc" />
+    <meta property="og:site_name" content="Scenic City Rumble" />
+    <meta property="og:image" content="https://scrumble.cc/public/white_duck_logo.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Scenic City Rumble" />
+    <meta name="twitter:description" content="Two local favorites enter. You pick the winner." />
+    <meta name="twitter:image" content="https://scrumble.cc/public/white_duck_logo.png" />
+    
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,7 +35,7 @@
   </head>
   <body>
     <nav class="navbar">
-      <div class="navbar-brand">SCRUMBLE</div>
+      <a href="/" class="navbar-brand" style="text-decoration: none; color: inherit;">SCRUMBLE</a>
       <div class="navbar-time" style="opacity: 0; transition: opacity 0.3s ease; color: var(--nav-accent); font-size: 0.9rem; font-weight: 500;"></div>
       <button class="navbar-toggle" aria-label="Toggle menu">
         <span></span>
@@ -29,13 +46,16 @@
         <li><a href="#arena">Vote</a></li>
         <li><a href="submit.html">Submit</a></li>
         <li><a href="history.html">History</a></li>
+        <li><a href="posters.html">Art</a></li>
         <li><a href="about.html">About</a></li>
         <li><a href="jobs.html">Jobs</a></li>
+        <li><button class="admin-toggle" type="button">Admin</button></li>
         <li><button class="theme-toggle" type="button" aria-label="Cycle theme">Theme</button></li>
       </ul>
     </nav>
     <div class="page">
       <header class="hero">
+        <div class="hero-bg" id="hero-bg"></div>
         <h1 class="hero-title">
           <span class="hero-word hero-word-1">SCENIC</span>
           <span class="hero-word hero-word-2">CITY</span>
@@ -44,7 +64,7 @@
         <div class="hero-actions">
           <button class="btn primary" data-scroll="arena" data-text="VOTE NOW">VOTE NOW</button>
           <a href="submit.html" class="btn ghost" style="text-decoration: none; line-height: 2.2;" data-text="SUBMIT A MATCHUP">SUBMIT A MATCHUP</a>
-          <button class="btn ghost" data-text="FUTURE MATCHUPS">FUTURE MATCHUPS</button>
+          <button class="btn ghost" id="future-matchups-btn" data-text="FUTURE MATCHUPS">FUTURE MATCHUPS</button>
         </div>
       </header>
 
@@ -70,15 +90,15 @@
         <section class="info-grid">
           <article class="panel">
             <h4>How it works</h4>
-            <p>One matchup a day. One vote per person. Fast, local, done.</p>
+            <p>Vote on local matchups. One vote per person. Fast, simple, done.</p>
           </article>
           <article class="panel">
             <h4>What we cover</h4>
-            <p>Food, music, outdoors, and weird local gems that deserve love.</p>
+            <p>Chattanooga, Dynamo of Dixie, the Scenic City, Gig City, River City—all the best of our town.</p>
           </article>
           <article class="panel">
             <h4>Bring the heat</h4>
-            <p>Submit a matchup and we will get it in the ring.</p>
+            <p><a href="submit.html" style="color: var(--accent); text-decoration: none;">Submit a matchup</a> and we'll get it in the ring.</p>
           </article>
         </section>
       </main>
@@ -87,6 +107,20 @@
         <div>Scenic City Rumble - Chattanooga, TN</div>
         <div>scrumble.cc</div>
       </footer>
+    </div>
+
+    <!-- Future Matchups Modal -->
+    <div class="modal" id="future-modal" style="display: none;">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Upcoming Matchups</h2>
+          <button class="modal-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body" id="future-list">
+          <div style="text-align: center; padding: 20px; color: var(--muted);">Loading...</div>
+        </div>
+      </div>
     </div>
 
     <div class="sticky-vote" id="sticky-vote">

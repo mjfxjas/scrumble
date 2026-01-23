@@ -7,7 +7,7 @@ const SEED_VOTES_CONFIG = normalizeSeedVotesConfig(window.SCRUMBLE_SEED_VOTES);
 const ENABLE_EDITOR = window.SCRUMBLE_ENABLE_EDITOR !== false;
 const UI_OVERRIDE_STORAGE_KEY = "scrumble-ui-overrides";
 
-let state = { voted: null };
+let state = { voted: null, loading: {} };
 let toastTimer = null;
 let uiOverrides = loadUiOverrides();
 let editorPanel = null;
@@ -19,6 +19,69 @@ const IMAGE_OVERRIDES = {
 
 function hasApi() {
   return API_URL.length > 0;
+}
+
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  
+  const fetchOptions = {
+    ...options,
+    signal: controller.signal
+  };
+  
+  let lastError;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, fetchOptions);
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Handle both old and new response formats
+        if (data.success === false) {
+          throw new Error(data.error || 'Request failed');
+        }
+        // New format: {success: true, data: {...}}
+        // Old format: {matchups: [...]} or {history: [...]}
+        const actualData = data.data || data;
+        return { ok: true, data: actualData };
+      }
+      
+      if (response.status >= 400 && response.status < 500) {
+        const data = await response.json();
+        throw new Error(data.error || `HTTP ${response.status}`);
+      }
+      
+      lastError = new Error(`HTTP ${response.status}`);
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        lastError = new Error('Request timeout');
+      } else {
+        lastError = err;
+      }
+    }
+    if (attempt < maxRetries - 1) {
+      const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
+}
+
+function setLoading(key, isLoading) {
+  state.loading[key] = isLoading;
+  updateLoadingUI(key, isLoading);
+}
+
+function updateLoadingUI(key, isLoading) {
+  if (key === 'matchup') {
+    const container = document.getElementById('matchup-container');
+    if (container && isLoading) {
+      container.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Loading matchups...</div>';
+    }
+  }
 }
 
 function normalizeSeedVotesConfig(config) {
@@ -194,60 +257,8 @@ function applyOverridesToState() {
 }
 
 function initOverrideEditor() {
-  if (!ENABLE_EDITOR || editorPanel) return;
-  editorPanel = document.createElement("div");
-  editorPanel.className = "editor-panel";
-  editorPanel.innerHTML = `
-    <button class="editor-toggle" type="button" data-action="toggle">Edit</button>
-    <div class="editor-body">
-      <div class="editor-header">
-        <div>
-          <div class="editor-title">Live Overrides</div>
-          <div class="editor-sub">Local only.</div>
-        </div>
-        <button class="editor-clear" type="button" data-action="clear-all">Clear</button>
-      </div>
-      <div class="editor-list"></div>
-    </div>
-  `;
-  document.body.appendChild(editorPanel);
-
-  editorPanel.addEventListener("click", (event) => {
-    const action = event.target?.dataset?.action;
-    if (action === "toggle") {
-      editorPanel.classList.toggle("is-open");
-      return;
-    }
-    if (action === "clear-all") {
-      clearAllUiOverrides();
-      renderOverrideEditor();
-      applyOverridesToState();
-      return;
-    }
-    if (action === "reset") {
-      const index = Number(event.target.dataset.index);
-      if (Number.isNaN(index)) return;
-      clearUiOverride(index);
-      renderOverrideEditor();
-      applyOverridesToState();
-    }
-  });
-
-  editorPanel.addEventListener("input", (event) => {
-    const input = event.target;
-    if (!input || !input.dataset) return;
-    if (!input.dataset.editorField) return;
-    const index = Number(input.dataset.index);
-    const group = input.dataset.group;
-    const key = input.dataset.key;
-    if (Number.isNaN(index) || !group || !key) return;
-
-    if (editorUpdateTimer) clearTimeout(editorUpdateTimer);
-    editorUpdateTimer = setTimeout(() => {
-      setUiOverrideValue(index, group, key, input.value);
-      applyOverridesToState();
-    }, 200);
-  });
+  // Disabled - admin mode on main page instead
+  return;
 }
 
 function getEditorValue(index, group, key, fallback) {
@@ -408,9 +419,45 @@ function getMatchupTheme(matchup) {
 
 function getEntryImage(entry) {
   if (!entry) return "";
-  if (entry.image_url) return entry.image_url;
+  if (entry.image_url) {
+    // Increase Google Places image size from 400 to 800
+    return entry.image_url.replace('maxWidthPx=400', 'maxWidthPx=800');
+  }
   const key = normalizeKey(entry.id || entry.name || "");
   return IMAGE_OVERRIDES[key] || "";
+}
+
+function createOptimizedImage(src, alt) {
+  // Create picture element with WebP/AVIF fallbacks
+  if (!src) return null;
+  
+  const picture = document.createElement('picture');
+  
+  // Try AVIF first (best compression)
+  if (src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.png')) {
+    const avifSrc = src.replace(/\.(jpg|jpeg|png)$/i, '.avif');
+    const sourceAvif = document.createElement('source');
+    sourceAvif.type = 'image/avif';
+    sourceAvif.srcset = avifSrc;
+    picture.appendChild(sourceAvif);
+    
+    // WebP fallback
+    const webpSrc = src.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    const sourceWebp = document.createElement('source');
+    sourceWebp.type = 'image/webp';
+    sourceWebp.srcset = webpSrc;
+    picture.appendChild(sourceWebp);
+  }
+  
+  // Original format fallback
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = alt;
+  img.className = 'fighter-img';
+  img.loading = 'lazy';
+  picture.appendChild(img);
+  
+  return picture;
 }
 
 function getMatchupLabel(matchup) {
@@ -469,18 +516,24 @@ function setEntryPreview(entryEl, url, name) {
 async function loadMatchup() {
   if (!hasApi()) return;
 
+  setLoading('matchup', true);
   try {
-    const resp = await fetch(`${API_URL}/matchup`);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
+    const result = await fetchWithRetry(`${API_URL}/matchup`);
+    console.log('Fetch result:', result);
+    const data = result.data;
+    console.log('Data:', data);
 
-    state.rawMatchups = data.matchups || [];
+    state.rawMatchups = (data && data.matchups) || [];
     applyOverridesToState();
     console.log('Loaded matchups:', state.matchups.length, state.matchups);
     initOverrideEditor();
     renderOverrideEditor();
   } catch (err) {
     console.error("Failed to load matchup:", err);
+    setMatchupEmpty("Failed to load matchups. Retrying...");
+    setTimeout(loadMatchup, 3000);
+  } finally {
+    setLoading('matchup', false);
   }
 }
 
@@ -508,17 +561,15 @@ function buildFighter(entry, side, matchupId, hasVoted, votedSide, count, pct) {
 
   const imageUrl = getEntryImage(entry);
   if (imageUrl) {
-    const img = document.createElement("img");
-    img.src = imageUrl;
-    img.className = "fighter-img";
-    img.alt = entry?.name || "Matchup entry";
-    fighter.appendChild(img);
+    fighter.style.setProperty('--fighter-bg', `url(${imageUrl})`);
   }
 
   const corner = document.createElement("div");
   corner.className = "fighter-corner";
-  corner.textContent = (entry?.tag || "Local").toUpperCase();
-  fighter.appendChild(corner);
+  const tag = entry?.tag || "";
+  const normalizedTag = tag.toLowerCase() === "local" ? "" : tag;
+  corner.textContent = normalizedTag.toUpperCase();
+  if (normalizedTag) fighter.appendChild(corner);
 
   const name = document.createElement("h3");
   name.textContent = entry?.name || "TBD";
@@ -534,37 +585,15 @@ function buildFighter(entry, side, matchupId, hasVoted, votedSide, count, pct) {
   button.dataset.side = side;
   button.dataset.matchupId = matchupId;
   if (hasVoted && votedSide === side) {
-    button.textContent = "VOTED";
+    button.innerHTML = `<span class="count">${count}</span> <span class="pct">${pct}%</span>`;
     button.classList.add("vote-selected");
+  } else if (hasVoted) {
+    button.innerHTML = `<span class="count">${count}</span> <span class="pct">${pct}%</span>`;
   } else {
     button.textContent = "VOTE";
   }
   button.disabled = hasVoted;
   fighter.appendChild(button);
-
-  const score = document.createElement("div");
-  score.className = "fighter-score";
-
-  const countEl = document.createElement("span");
-  countEl.className = "count";
-  const pctEl = document.createElement("span");
-  pctEl.className = "pct";
-
-  if (hasVoted) {
-    countEl.textContent = count;
-    pctEl.textContent = `${pct}%`;
-    countEl.style.opacity = "1";
-    pctEl.style.opacity = "1";
-  } else {
-    countEl.textContent = "?";
-    pctEl.textContent = "?";
-    countEl.style.opacity = "0.3";
-    pctEl.style.opacity = "0.3";
-  }
-
-  score.appendChild(countEl);
-  score.appendChild(pctEl);
-  fighter.appendChild(score);
 
   return fighter;
 }
@@ -643,10 +672,36 @@ function buildMatchupCard(matchupData, index, anchor) {
   share.textContent = "Share this matchup";
   if (hasVoted) share.classList.add("is-visible");
   actions.appendChild(share);
+  
+  const commentsBtn = document.createElement("button");
+  commentsBtn.className = "comments-toggle";
+  commentsBtn.textContent = "💬 Comments";
+  commentsBtn.dataset.matchupId = matchupId;
+  commentsBtn.id = `comments-btn-${matchupId}`;
+  actions.appendChild(commentsBtn);
+  
+  const commentsSection = document.createElement("div");
+  commentsSection.className = "comments-section";
+  commentsSection.id = `comments-${matchupId}`;
+  commentsSection.innerHTML = '<div class="comments-loading">Loading...</div>';
 
   card.appendChild(title);
   card.appendChild(diagonal);
   card.appendChild(actions);
+  card.appendChild(commentsSection);
+  
+  if (adminMode) {
+    const adminBar = document.createElement('div');
+    adminBar.className = 'admin-bar';
+    adminBar.innerHTML = `
+      <button class="admin-btn admin-edit-matchup" data-matchup-id="${matchupId}">Edit</button>
+      <button class="admin-btn admin-reset-votes" data-matchup-id="${matchupId}">Reset Votes</button>
+      <button class="admin-btn admin-seed-comments" data-matchup-id="${matchupId}">Seed Comments</button>
+      <button class="admin-btn admin-toggle-active" data-matchup-id="${matchupId}">${matchup.active ? 'Deactivate' : 'Activate'}</button>
+      <button class="admin-btn admin-delete-matchup" data-matchup-id="${matchupId}">Delete</button>
+    `;
+    card.appendChild(adminBar);
+  }
 
   return card;
 }
@@ -684,6 +739,7 @@ function render() {
   container.appendChild(fragment);
 
   updateStickyVote();
+  loadCommentCounts();
 }
 
 function getTimeRemaining(endsAt) {
@@ -821,8 +877,13 @@ async function vote(side, btn) {
   
   const fingerprint = getFingerprint();
 
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'VOTING...';
+  }
+
   try {
-    const resp = await fetch(`${API_URL}/vote`, {
+    const result = await fetchWithRetry(`${API_URL}/vote`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -832,7 +893,9 @@ async function vote(side, btn) {
       }),
     });
 
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    if (!result.ok) {
+      throw new Error('Vote failed');
+    }
 
     if (!state.voted) state.voted = {};
     state.voted[matchupId] = actualSide;
@@ -854,10 +917,15 @@ async function vote(side, btn) {
     
     const nextMatchupIdx = getNextUnvotedIndex();
     if (nextMatchupIdx >= 0) {
-      setTimeout(() => scrollToMatchupIndex(nextMatchupIdx), 800);
+      setTimeout(() => scrollToMatchupIndex(nextMatchupIdx), 1600);
     }
   } catch (err) {
     console.error("Vote failed:", err);
+    showToast("Vote failed. Try again.");
+    if (btn) {
+      btn.textContent = 'RETRY';
+      btn.disabled = false;
+    }
   }
 }
 
@@ -987,17 +1055,110 @@ function init() {
 
   window.addEventListener("hashchange", handleHashNavigation);
   setTimeout(handleHashNavigation, 400);
+  
+  // Future matchups button
+  const futureBtn = document.getElementById('future-matchups-btn');
+  if (futureBtn) {
+    futureBtn.addEventListener('click', showFutureMatchups);
+  }
+  
+  // Modal close handlers
+  const modal = document.getElementById('future-modal');
+  if (modal) {
+    modal.querySelector('.modal-close')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+    modal.querySelector('.modal-overlay')?.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+  }
+}
+
+async function showFutureMatchups() {
+  const modal = document.getElementById('future-modal');
+  const list = document.getElementById('future-list');
+  if (!modal || !list) return;
+  
+  modal.style.display = 'block';
+  list.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">Loading...</div>';
+  
+  if (!hasApi()) {
+    list.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">API not configured</div>';
+    return;
+  }
+  
+  try {
+    const result = await fetchWithRetry(`${API_URL}/future`);
+    const data = result.data;
+    
+    if (!data || !data.matchups || data.matchups.length === 0) {
+      list.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">No upcoming matchups</div>';
+      return;
+    }
+    
+    const now = new Date();
+    const future = data.matchups.filter(m => {
+      if (!m.matchup.starts_at) return false;
+      const starts = new Date(m.matchup.starts_at);
+      return starts > now;
+    }).slice(0, 5);
+    
+    if (future.length === 0) {
+      list.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">No scheduled matchups yet</div>';
+      return;
+    }
+    
+    list.innerHTML = future.map(m => {
+      const starts = new Date(m.matchup.starts_at);
+      const timeUntil = getTimeUntil(starts);
+      return `
+        <div style="padding: 16px; border-bottom: 1px solid var(--border);">
+          <div style="font-weight: 600; margin-bottom: 4px;">${m.matchup.title}</div>
+          <div style="color: var(--muted); font-size: 0.9rem; margin-bottom: 8px;">${m.matchup.category}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 0.85rem;">${m.left.name} vs ${m.right.name}</div>
+            </div>
+            <div style="color: var(--accent); font-size: 0.85rem; font-weight: 500;">${timeUntil}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Failed to load future matchups:', err);
+    list.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">Failed to load</div>';
+  }
+}
+
+function getTimeUntil(date) {
+  const now = new Date();
+  const diff = date - now;
+  
+  if (diff <= 0) return 'Starting soon';
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  
+  if (days > 0) return `Starts in ${days}d ${hours}h`;
+  if (hours > 0) return `Starts in ${hours}h`;
+  return 'Starting soon';
 }
 
 async function loadHistory() {
   if (!hasApi()) return;
   
+  const list = document.getElementById('history-list');
+  if (list) {
+    list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Loading history...</div>';
+  }
+
   try {
-    const resp = await fetch(`${API_URL}/history`);
-    const data = await resp.json();
+    const result = await fetchWithRetry(`${API_URL}/history`);
+    const data = result.data;
     
-    const list = document.getElementById('history-list');
-    if (!data.history || data.history.length === 0) {
+    if (!list) return;
+    
+    if (!data || !data.history || data.history.length === 0) {
       list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">No past brawls yet</div>';
       return;
     }
@@ -1020,7 +1181,397 @@ async function loadHistory() {
     }).join('');
   } catch (err) {
     console.error('Failed to load history:', err);
+    if (list) {
+      list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Failed to load history</div>';
+    }
   }
 }
 
 init();
+
+// Rotating poster background
+async function initHeroBackground() {
+  const heroBg = document.getElementById('hero-bg');
+  if (!heroBg) return;
+  
+  try {
+    const response = await fetch('/SCRUMBLE_POSTERS/posters.json');
+    const posters = await response.json();
+    if (!posters || posters.length === 0) return;
+    
+    let currentIndex = Math.floor(Math.random() * posters.length);
+    
+    function showPoster(index) {
+      const poster = posters[index];
+      if (!poster) return;
+      
+      const img = document.createElement('img');
+      img.src = poster.hero;
+      img.alt = poster.name;
+      img.onload = () => {
+        heroBg.innerHTML = '';
+        heroBg.appendChild(img);
+        heroBg.classList.add('active');
+      };
+    }
+    
+    showPoster(currentIndex);
+    
+    setInterval(() => {
+      currentIndex = (currentIndex + 1) % posters.length;
+      heroBg.classList.remove('active');
+      setTimeout(() => showPoster(currentIndex), 1000);
+    }, 8000);
+  } catch (err) {
+    console.error('Failed to load posters:', err);
+  }
+}
+
+// initHeroBackground();
+
+
+// Comments
+document.body.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('comments-toggle')) {
+    const matchupId = e.target.dataset.matchupId;
+    const section = document.getElementById(`comments-${matchupId}`);
+    
+    if (section.classList.contains('expanded')) {
+      section.classList.remove('expanded');
+      return;
+    }
+    
+    section.classList.add('expanded');
+    await loadComments(matchupId);
+  }
+  
+  if (e.target.classList.contains('comment-submit')) {
+    const matchupId = e.target.dataset.matchupId;
+    await submitComment(matchupId);
+  }
+  
+  if (e.target.classList.contains('comment-delete')) {
+    const matchupId = e.target.dataset.matchupId;
+    const timestamp = e.target.dataset.timestamp;
+    await deleteComment(matchupId, timestamp);
+  }
+});
+
+async function loadComments(matchupId) {
+  const section = document.getElementById(`comments-${matchupId}`);
+  section.innerHTML = '<div class="comments-loading">Loading...</div>';
+  
+  try {
+    const result = await fetchWithRetry(`${API_URL}/comments?matchup_id=${matchupId}`);
+    const comments = result.data.comments || [];
+    
+    updateCommentCount(matchupId, comments.length);
+    
+    section.innerHTML = `
+      <div class="comment-form">
+        <input type="text" class="comment-name" placeholder="Your name" maxlength="50" />
+        <textarea class="comment-text" placeholder="Add a comment..." maxlength="500"></textarea>
+        <button class="btn vote comment-submit" data-matchup-id="${matchupId}">Post</button>
+      </div>
+      <div class="comment-list">
+        ${comments.length === 0 ? '<div class="comment-empty">No comments yet. Be the first!</div>' : ''}
+        ${comments.map(c => `
+          <div class="comment">
+            <div class="comment-author">${c.author_name}</div>
+            <div class="comment-text">${c.comment_text}</div>
+            ${adminMode ? `<button class="comment-delete" data-matchup-id="${matchupId}" data-timestamp="${c.timestamp}">Delete</button>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } catch (err) {
+    section.innerHTML = '<div class="comments-error">Failed to load comments</div>';
+  }
+}
+
+function updateCommentCount(matchupId, count) {
+  const btn = document.getElementById(`comments-btn-${matchupId}`);
+  if (btn) {
+    btn.textContent = `💬 Comments (${count})`;
+  }
+}
+
+async function loadCommentCounts() {
+  if (!state.matchups) return;
+  
+  for (const matchup of state.matchups) {
+    const matchupId = matchup.matchup.id;
+    try {
+      const result = await fetchWithRetry(`${API_URL}/comments?matchup_id=${matchupId}`);
+      const count = result.data.comments?.length || 0;
+      updateCommentCount(matchupId, count);
+    } catch (err) {
+      // Ignore errors
+    }
+  }
+}
+
+async function submitComment(matchupId) {
+  const section = document.getElementById(`comments-${matchupId}`);
+  const nameInput = section.querySelector('.comment-name');
+  const textInput = section.querySelector('.comment-text');
+  
+  const name = nameInput.value.trim();
+  const text = textInput.value.trim();
+  
+  if (!name || !text) {
+    showToast('Name and comment required');
+    return;
+  }
+  
+  try {
+    await fetchWithRetry(`${API_URL}/comment`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        matchup_id: matchupId,
+        author_name: name,
+        comment_text: text,
+        fingerprint: getFingerprint()
+      })
+    });
+    
+    nameInput.value = '';
+    textInput.value = '';
+    showToast('Comment posted!');
+    await loadComments(matchupId);
+  } catch (err) {
+    showToast('Failed to post comment');
+  }
+}
+
+
+async function deleteComment(matchupId, timestamp) {
+  if (!adminMode || !adminKey) {
+    showToast('Admin access required');
+    return;
+  }
+  
+  try {
+    await fetchWithRetry(`${API_URL}/comment/${matchupId}/${timestamp}`, {
+      method: 'DELETE',
+      headers: {'X-Admin-Key': adminKey}
+    });
+    
+    showToast('Comment deleted');
+    await loadComments(matchupId);
+  } catch (err) {
+    showToast('Failed to delete comment');
+  }
+}
+
+
+// Admin Mode
+let adminMode = false;
+let adminKey = null;
+
+function checkAdminMode() {
+  adminKey = sessionStorage.getItem('scrumble-admin-key');
+  if (adminKey) {
+    adminMode = true;
+    updateAdminUI();
+  }
+}
+
+function updateAdminUI() {
+  const toggle = document.querySelector('.admin-toggle');
+  if (!toggle) return;
+  
+  if (adminMode) {
+    toggle.textContent = 'Logout';
+    toggle.style.background = 'rgba(255, 68, 68, 0.2)';
+    toggle.style.borderColor = '#ff4444';
+    document.body.classList.add('admin-mode');
+  } else {
+    toggle.textContent = 'Admin';
+    toggle.style.background = '';
+    toggle.style.borderColor = '';
+    document.body.classList.remove('admin-mode');
+  }
+  
+  render();
+}
+
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('admin-toggle')) {
+    if (adminMode) {
+      sessionStorage.removeItem('scrumble-admin-key');
+      adminKey = null;
+      adminMode = false;
+      updateAdminUI();
+    } else {
+      const key = prompt('Enter admin key:');
+      if (!key) return;
+      
+      try {
+        const result = await fetchWithRetry(`${API_URL}/admin/login`, {
+          method: 'POST',
+          headers: {'X-Admin-Key': key}
+        });
+        
+        if (result.ok) {
+          sessionStorage.setItem('scrumble-admin-key', key);
+          adminKey = key;
+          adminMode = true;
+          updateAdminUI();
+          showToast('Admin mode enabled');
+        }
+      } catch (err) {
+        showToast('Invalid admin key');
+      }
+    }
+  }
+  
+  if (e.target.classList.contains('admin-delete-matchup')) {
+    const matchupId = e.target.dataset.matchupId;
+    if (confirm('Delete this matchup?')) {
+      await deleteMatchup(matchupId);
+    }
+  }
+  
+  if (e.target.classList.contains('admin-toggle-active')) {
+    const matchupId = e.target.dataset.matchupId;
+    await toggleMatchupActive(matchupId);
+  }
+  
+  if (e.target.classList.contains('admin-edit-matchup')) {
+    const matchupId = e.target.dataset.matchupId;
+    await editMatchup(matchupId);
+  }
+  
+  if (e.target.classList.contains('admin-reset-votes')) {
+    const matchupId = e.target.dataset.matchupId;
+    if (confirm('Reset votes to 0?')) {
+      await resetVotes(matchupId);
+    }
+  }
+  
+  if (e.target.classList.contains('admin-seed-comments')) {
+    const matchupId = e.target.dataset.matchupId;
+    await seedComments(matchupId);
+  }
+});
+
+async function deleteMatchup(matchupId) {
+  try {
+    await fetchWithRetry(`${API_URL}/admin/matchup/${matchupId}`, {
+      method: 'DELETE',
+      headers: {'X-Admin-Key': adminKey}
+    });
+    showToast('Matchup deleted');
+    await loadMatchup();
+  } catch (err) {
+    showToast('Failed to delete matchup');
+  }
+}
+
+async function toggleMatchupActive(matchupId) {
+  const matchup = state.matchups.find(m => m.matchup.id === matchupId);
+  if (!matchup) return;
+  
+  try {
+    await fetchWithRetry(`${API_URL}/admin/matchup/${matchupId}`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json', 'X-Admin-Key': adminKey},
+      body: JSON.stringify({active: !matchup.matchup.active})
+    });
+    showToast('Matchup updated');
+    await loadMatchup();
+  } catch (err) {
+    showToast('Failed to update matchup');
+  }
+}
+
+async function editMatchup(matchupId) {
+  const matchup = state.matchups.find(m => m.matchup.id === matchupId);
+  if (!matchup) return;
+  
+  const endsAt = prompt('Ends at (ISO format or empty):', matchup.matchup.ends_at || '');
+  if (endsAt === null) return;
+  
+  const message = prompt('Header message:', matchup.matchup.message || '');
+  if (message === null) return;
+  
+  try {
+    await fetchWithRetry(`${API_URL}/admin/matchup/${matchupId}`, {
+      method: 'PATCH',
+      headers: {'Content-Type': 'application/json', 'X-Admin-Key': adminKey},
+      body: JSON.stringify({ends_at: endsAt, message: message})
+    });
+    showToast('Matchup updated');
+    await loadMatchup();
+  } catch (err) {
+    showToast('Failed to update matchup');
+  }
+}
+
+async function resetVotes(matchupId) {
+  try {
+    await fetchWithRetry(`${API_URL}/admin/matchup/${matchupId}/reset-votes`, {
+      method: 'POST',
+      headers: {'X-Admin-Key': adminKey}
+    });
+    showToast('Votes reset');
+    await loadMatchup();
+  } catch (err) {
+    showToast('Failed to reset votes');
+  }
+}
+
+const SEED_COMMENTS = [
+  {name: 'Sarah M.', text: 'This is such a tough choice!'},
+  {name: 'Mike Johnson', text: 'Both are great, but I have to go with my gut.'},
+  {name: 'Jessica R.', text: 'Can\'t believe this is even a question!'},
+  {name: 'David Chen', text: 'I\'ve been to both and honestly can\'t decide.'},
+  {name: 'Emily Parker', text: 'First!'},
+  {name: 'Chris Anderson', text: 'This matchup is fire 🔥'},
+  {name: 'Amanda Lee', text: 'Y\'all are sleeping on the other option.'},
+  {name: 'Brandon K.', text: 'I love Chattanooga but this one is obvious.'},
+  {name: 'Rachel Green', text: 'Been going here for years, no contest.'},
+  {name: 'Tom Wilson', text: 'Interesting matchup! Hard to choose.'},
+  {name: 'Lisa Brown', text: 'Both have their pros and cons tbh.'},
+  {name: 'Kevin Martinez', text: 'The vibes are just better at one of these.'},
+  {name: 'Nicole Davis', text: 'This is the matchup we needed!'},
+  {name: 'Jason Taylor', text: 'Respect to both but my vote is clear.'},
+  {name: 'Megan White', text: 'Can we just appreciate both? 😊'},
+  {name: 'Ryan Thompson', text: 'Hot take: neither is that great.'},
+  {name: 'Ashley Moore', text: 'Finally someone said it!'},
+  {name: 'Daniel Garcia', text: 'This is going to be close.'},
+  {name: 'Lauren Hill', text: 'I\'m shocked this is even competitive.'},
+  {name: 'Marcus Jones', text: 'Quality matchup right here.'}
+];
+
+async function seedComments(matchupId) {
+  const count = parseInt(prompt('How many comments to seed? (1-10)', '3'));
+  if (!count || count < 1 || count > 10) return;
+  
+  const shuffled = [...SEED_COMMENTS].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, count);
+  
+  try {
+    for (const comment of selected) {
+      await fetchWithRetry(`${API_URL}/comment`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          matchup_id: matchupId,
+          author_name: comment.name,
+          comment_text: comment.text,
+          fingerprint: 'seed'
+        })
+      });
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    showToast(`Seeded ${count} comments`);
+    await loadCommentCounts();
+  } catch (err) {
+    showToast('Failed to seed comments');
+  }
+}
+
+checkAdminMode();

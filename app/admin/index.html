@@ -1,54 +1,214 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Scrumble Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/admin.css" />
-  </head>
-  <body>
-    <div class="auth-shell" id="auth-shell">
-      <div class="auth-card">
-        <div class="auth-brand">Scrumble Admin</div>
-        <div class="auth-sub">Sign in to manage matchups.</div>
-        <form id="login-form">
-          <label class="auth-label" for="admin-key">Admin key</label>
-          <input type="password" id="admin-key" placeholder="Enter admin key" autocomplete="current-password" required />
-          <button type="submit" class="btn primary">Log in</button>
-        </form>
-        <div id="auth-error" class="auth-error" aria-live="polite"></div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Scrumble</title>
+  <link rel="icon" type="image/x-icon" href="../public/scrumble_favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    .admin-container { max-width: 1200px; margin: 0 auto; padding: 80px 24px 60px; }
+    .admin-header { margin-bottom: 40px; }
+    .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 40px; }
+    .stat-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 20px; }
+    .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); }
+    .stat-label { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .matchup-list { display: flex; flex-direction: column; gap: 12px; }
+    .matchup-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .matchup-item.active { border-color: var(--accent); background: rgba(212, 175, 55, 0.05); }
+    .matchup-info { flex: 1; }
+    .matchup-title { font-weight: 600; margin-bottom: 4px; }
+    .matchup-meta { font-size: 0.85rem; color: var(--muted); }
+    .matchup-actions { display: flex; gap: 8px; }
+    .section { margin-bottom: 40px; }
+    .section h2 { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">SCRUMBLE ADMIN</div>
+    <ul class="navbar-menu">
+      <li><a href="../index.html">Home</a></li>
+      <li><button class="theme-toggle" type="button">Theme</button></li>
+    </ul>
+  </nav>
+
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1>Admin Dashboard</h1>
+      <p style="color: var(--muted);">Manage matchups and view stats</p>
+    </div>
+
+    <div class="admin-stats">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-visits">-</div>
+        <div class="stat-label">Total Visits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-real-visits">-</div>
+        <div class="stat-label">Real Visits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-active">-</div>
+        <div class="stat-label">Active Matchups</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total">-</div>
+        <div class="stat-label">Total Matchups</div>
       </div>
     </div>
 
-    <div class="admin-page" id="admin-app" hidden>
-      <header class="admin-header">
-        <div>
-          <h1>Scrumble Admin</h1>
-          <div id="auth-status"></div>
-        </div>
-        <button class="btn ghost" id="logout-btn" type="button">Log out</button>
-      </header>
-
-      <nav class="admin-tabs">
-        <button class="tab-btn active" data-tab="matchups">Matchups</button>
-        <button class="tab-btn" data-tab="submissions">Submissions</button>
-      </nav>
-
-      <main class="admin-main">
-        <section id="tab-matchups" class="tab-panel active">
-          <div id="matchups-list"></div>
-        </section>
-
-        <section id="tab-submissions" class="tab-panel">
-          <div id="submissions-list"></div>
-        </section>
-      </main>
+    <div class="section">
+      <h2>Active Matchups</h2>
+      <div class="matchup-list" id="active-list">
+        <div style="text-align: center; padding: 20px; color: var(--muted);">Loading...</div>
+      </div>
     </div>
 
-    <script src="/config.js"></script>
-    <script src="/admin.js"></script>
-  </body>
+    <div class="section">
+      <h2>Inactive Matchups</h2>
+      <div class="matchup-list" id="inactive-list">
+        <div style="text-align: center; padding: 20px; color: var(--muted);">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../config.js"></script>
+  <script src="../theme.js"></script>
+  <script>
+    const API_BASE = (window.SCRUMBLE_API_BASE || "").trim();
+    const API_URL = API_BASE.endsWith("/") ? API_BASE.slice(0, -1) : API_BASE;
+    let adminKey = sessionStorage.getItem('scrumble-admin-key');
+
+    if (!adminKey) {
+      adminKey = prompt('Enter admin key:');
+      if (!adminKey) {
+        window.location.href = '../index.html';
+      }
+    }
+
+    async function fetchWithAuth(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'X-Admin-Key': adminKey
+        }
+      });
+      
+      if (response.status === 403) {
+        sessionStorage.removeItem('scrumble-admin-key');
+        alert('Invalid admin key');
+        window.location.href = '../index.html';
+        return null;
+      }
+      
+      const data = await response.json();
+      return data.data || data;
+    }
+
+    async function loadStats() {
+      try {
+        const visits = await fetchWithAuth(`${API_URL}/admin/visits`);
+        document.getElementById('stat-visits').textContent = visits.all || 0;
+        document.getElementById('stat-real-visits').textContent = visits.real || 0;
+      } catch (err) {
+        console.error('Failed to load stats:', err);
+      }
+    }
+
+    async function loadMatchups() {
+      try {
+        const data = await fetchWithAuth(`${API_URL}/admin/matchups`);
+        const matchups = data.matchups || [];
+        
+        const active = matchups.filter(m => m.matchup.active);
+        const inactive = matchups.filter(m => !m.matchup.active);
+        
+        document.getElementById('stat-active').textContent = active.length;
+        document.getElementById('stat-total').textContent = matchups.length;
+        
+        renderMatchupList('active-list', active, true);
+        renderMatchupList('inactive-list', inactive, false);
+      } catch (err) {
+        console.error('Failed to load matchups:', err);
+      }
+    }
+
+    function renderMatchupList(listId, matchups, isActive) {
+      const list = document.getElementById(listId);
+      
+      if (matchups.length === 0) {
+        list.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted);">No matchups</div>';
+        return;
+      }
+      
+      list.innerHTML = matchups.map(m => {
+        return `
+          <div class="matchup-item ${isActive ? 'active' : ''}">
+            <div class="matchup-info">
+              <div class="matchup-title">${m.matchup.title || m.matchup.category}</div>
+              <div class="matchup-meta">
+                ${m.left.name} vs ${m.right.name} • ${m.matchup.category}
+                ${m.matchup.starts_at ? ` • Starts: ${new Date(m.matchup.starts_at).toLocaleDateString()}` : ''}
+                ${m.matchup.ends_at ? ` • Ends: ${new Date(m.matchup.ends_at).toLocaleDateString()}` : ''}
+              </div>
+            </div>
+            <div class="matchup-actions">
+              <button class="btn vote" onclick="editSchedule('${m.matchup.id}')">Schedule</button>
+              <button class="btn vote" onclick="toggleActive('${m.matchup.id}', ${!isActive})">${isActive ? 'Deactivate' : 'Activate'}</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function toggleActive(matchupId, activate) {
+      try {
+        if (activate) {
+          await fetchWithAuth(`${API_URL}/admin/activate`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({matchup_id: matchupId})
+          });
+        } else {
+          await fetchWithAuth(`${API_URL}/admin/matchup/${matchupId}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({active: false})
+          });
+        }
+        await loadMatchups();
+      } catch (err) {
+        alert('Failed to update matchup');
+      }
+    }
+
+    async function editSchedule(matchupId) {
+      const startsAt = prompt('Start time (ISO format, e.g. 2026-01-25T10:00:00Z):');
+      if (startsAt === null) return;
+      
+      const endsAt = prompt('End time (ISO format, e.g. 2026-01-26T10:00:00Z):');
+      if (endsAt === null) return;
+      
+      try {
+        await fetchWithAuth(`${API_URL}/admin/matchup/${matchupId}`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({starts_at: startsAt, ends_at: endsAt})
+        });
+        await loadMatchups();
+      } catch (err) {
+        alert('Failed to update schedule');
+      }
+    }
+
+    sessionStorage.setItem('scrumble-admin-key', adminKey);
+    loadStats();
+    loadMatchups();
+  </script>
+</body>
 </html>

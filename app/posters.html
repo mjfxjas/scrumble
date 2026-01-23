@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Scrumble Posters</title>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; }
+    header { padding: 24px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      padding: 0 24px 24px;
+    }
+    a.card { display: block; border-radius: 10px; overflow: hidden; background: #f3f3f3; }
+    a.card img { width: 100%; height: auto; display: block; }
+    .lightbox {
+      position: fixed; inset: 0; background: rgba(0,0,0,.85);
+      display: none; align-items: center; justify-content: center; padding: 24px;
+    }
+    .lightbox img { max-width: 95vw; max-height: 92vh; border-radius: 10px; }
+    .lightbox.show { display: flex; }
+    .hint { color: #666; font-size: 14px; padding: 0 24px 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Scrumble Posters</h1>
+    <div class="hint">Click a poster to view full size. Press Esc to close.</div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+    <img id="lightboxImg" alt="Scrumble poster" />
+  </div>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('show');
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('show');
+      lightboxImg.src = "";
+    }
+
+    lightbox.addEventListener('click', closeLightbox);
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    fetch('/SCRUMBLE_POSTERS/posters.json', { cache: 'no-store' })
+      .then(response => response.json())
+      .then(items => {
+        items.forEach(item => {
+          const anchor = document.createElement('a');
+          anchor.className = 'card';
+          anchor.href = item.hero;
+          anchor.addEventListener('click', (e) => {
+            e.preventDefault();
+            openLightbox(item.hero);
+          });
+
+          const img = document.createElement('img');
+          img.loading = "lazy";
+          img.src = item.thumb;
+          img.alt = item.name;
+
+          anchor.appendChild(img);
+          grid.appendChild(anchor);
+        });
+      })
+      .catch(err => {
+        grid.innerHTML = '<div style="padding:24px;color:#b00">Failed to load posters.</div>';
+        console.error(err);
+      });
+  </script>
+</body>
+</html>

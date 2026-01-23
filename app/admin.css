@@ -96,6 +96,51 @@ body {
   color: var(--muted);
 }
 
+.visit-summary {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.visit-card {
+  flex: 1;
+  min-width: 200px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.visit-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.visit-value {
+  margin-top: 6px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.visit-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 160px;
+}
+
+.visit-status {
+  min-height: 18px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .admin-tabs {
   display: flex;
   gap: 10px;
@@ -355,6 +400,14 @@ select:focus {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .visit-summary {
+    flex-direction: column;
+  }
+
+  .visit-actions {
+    width: 100%;
   }
   
   .matchup-stats {

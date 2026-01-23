@@ -1,0 +1,1110 @@
+{
+  "entries": [
+    {
+      "id": "signal-mountain",
+      "name": "Signal Mountain",
+      "blurb": "Signal Mountain in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "lookout-mountain",
+      "name": "Lookout Mountain",
+      "blurb": "Lookout Mountain in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "northshore",
+      "name": "Northshore",
+      "blurb": "Northshore in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "southside",
+      "name": "Southside",
+      "blurb": "Southside in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "downtown",
+      "name": "Downtown",
+      "blurb": "Downtown in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "st.-elmo",
+      "name": "St. Elmo",
+      "blurb": "St. Elmo in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "red-bank",
+      "name": "Red Bank",
+      "blurb": "Red Bank in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "east-brainerd",
+      "name": "East Brainerd",
+      "blurb": "East Brainerd in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "hixson",
+      "name": "Hixson",
+      "blurb": "Hixson in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "ooltewah",
+      "name": "Ooltewah",
+      "blurb": "Ooltewah in Chattanooga",
+      "neighborhood": "",
+      "category": "Places to Live",
+      "tag": "Local"
+    },
+    {
+      "id": "mccallie",
+      "name": "McCallie",
+      "blurb": "McCallie in Chattanooga",
+      "neighborhood": "",
+      "category": "Education",
+      "tag": "Local"
+    },
+    {
+      "id": "baylor",
+      "name": "Baylor",
+      "blurb": "Baylor in Chattanooga",
+      "neighborhood": "",
+      "category": "Education",
+      "tag": "Local"
+    },
+    {
+      "id": "gps",
+      "name": "GPS",
+      "blurb": "GPS in Chattanooga",
+      "neighborhood": "",
+      "category": "Education",
+      "tag": "Local"
+    },
+    {
+      "id": "ccs",
+      "name": "CCS",
+      "blurb": "CCS in Chattanooga",
+      "neighborhood": "",
+      "category": "Education",
+      "tag": "Local"
+    },
+    {
+      "id": "boyd-buchanan",
+      "name": "Boyd-Buchanan",
+      "blurb": "Boyd-Buchanan in Chattanooga",
+      "neighborhood": "",
+      "category": "Education",
+      "tag": "Local"
+    },
+    {
+      "id": "publix",
+      "name": "Publix",
+      "blurb": "Publix in Chattanooga",
+      "neighborhood": "",
+      "category": "Grocery",
+      "tag": "Local"
+    },
+    {
+      "id": "whole-foods",
+      "name": "Whole Foods",
+      "blurb": "Whole Foods in Chattanooga",
+      "neighborhood": "",
+      "category": "Grocery",
+      "tag": "Local"
+    },
+    {
+      "id": "fresh-market",
+      "name": "Fresh Market",
+      "blurb": "Fresh Market in Chattanooga",
+      "neighborhood": "",
+      "category": "Grocery",
+      "tag": "Local"
+    },
+    {
+      "id": "costco",
+      "name": "Costco",
+      "blurb": "Costco in Chattanooga",
+      "neighborhood": "",
+      "category": "Grocery",
+      "tag": "Local"
+    },
+    {
+      "id": "sams-club",
+      "name": "Sam's Club",
+      "blurb": "Sam's Club in Chattanooga",
+      "neighborhood": "",
+      "category": "Grocery",
+      "tag": "Local"
+    },
+    {
+      "id": "gordons",
+      "name": "Gordon's",
+      "blurb": "Gordon's in Chattanooga",
+      "neighborhood": "",
+      "category": "Grocery",
+      "tag": "Local"
+    },
+    {
+      "id": "tienda-la-carniceria",
+      "name": "Tienda La Carniceria",
+      "blurb": "Tienda La Carniceria in Chattanooga",
+      "neighborhood": "",
+      "category": "Grocery",
+      "tag": "Local"
+    },
+    {
+      "id": "tremont-tavern",
+      "name": "Tremont Tavern",
+      "blurb": "Tremont Tavern in Chattanooga",
+      "neighborhood": "Northshore",
+      "category": "Food",
+      "tag": "Local"
+    },
+    {
+      "id": "main-st-meats",
+      "name": "Main St Meats",
+      "blurb": "Main St Meats in Chattanooga",
+      "neighborhood": "Southside",
+      "category": "Food",
+      "tag": "Local"
+    },
+    {
+      "id": "five-guys",
+      "name": "Five Guys",
+      "blurb": "Five Guys in Chattanooga",
+      "neighborhood": "",
+      "category": "Food",
+      "tag": "Local"
+    },
+    {
+      "id": "burger-king",
+      "name": "Burger King",
+      "blurb": "Burger King in Chattanooga",
+      "neighborhood": "",
+      "category": "Food",
+      "tag": "Local"
+    },
+    {
+      "id": "velo-coffee",
+      "name": "Velo Coffee",
+      "blurb": "Velo Coffee in Chattanooga",
+      "neighborhood": "Southside",
+      "category": "Coffee",
+      "tag": "Local"
+    },
+    {
+      "id": "mean-mug",
+      "name": "Mean Mug",
+      "blurb": "Mean Mug in Chattanooga",
+      "neighborhood": "Northshore",
+      "category": "Coffee",
+      "tag": "Local"
+    },
+    {
+      "id": "starbucks",
+      "name": "Starbucks",
+      "blurb": "Starbucks in Chattanooga",
+      "neighborhood": "",
+      "category": "Coffee",
+      "tag": "Local"
+    },
+    {
+      "id": "dunkin",
+      "name": "Dunkin'",
+      "blurb": "Dunkin' in Chattanooga",
+      "neighborhood": "",
+      "category": "Coffee",
+      "tag": "Local"
+    },
+    {
+      "id": "bluegrass-grill",
+      "name": "Bluegrass Grill",
+      "blurb": "Bluegrass Grill in Chattanooga",
+      "neighborhood": "",
+      "category": "Breakfast",
+      "tag": "Local"
+    },
+    {
+      "id": "milk-and-honey",
+      "name": "Milk & Honey",
+      "blurb": "Milk & Honey in Chattanooga",
+      "neighborhood": "",
+      "category": "Breakfast",
+      "tag": "Local"
+    },
+    {
+      "id": "waffle-house",
+      "name": "Waffle House",
+      "blurb": "Waffle House in Chattanooga",
+      "neighborhood": "",
+      "category": "Breakfast",
+      "tag": "Local"
+    },
+    {
+      "id": "ihop",
+      "name": "IHOP",
+      "blurb": "IHOP in Chattanooga",
+      "neighborhood": "",
+      "category": "Breakfast",
+      "tag": "Local"
+    },
+    {
+      "id": "lupis",
+      "name": "Lupi's",
+      "blurb": "Lupi's in Chattanooga",
+      "neighborhood": "",
+      "category": "Food",
+      "tag": "Local"
+    },
+    {
+      "id": "mellow-mushroom",
+      "name": "Mellow Mushroom",
+      "blurb": "Mellow Mushroom in Chattanooga",
+      "neighborhood": "",
+      "category": "Food",
+      "tag": "Local"
+    },
+    {
+      "id": "dominos",
+      "name": "Domino's",
+      "blurb": "Domino's in Chattanooga",
+      "neighborhood": "",
+      "category": "Food",
+      "tag": "Local"
+    },
+    {
+      "id": "pizza-hut",
+      "name": "Pizza Hut",
+      "blurb": "Pizza Hut in Chattanooga",
+      "neighborhood": "",
+      "category": "Food",
+      "tag": "Local"
+    },
+    {
+      "id": "coolidge-park",
+      "name": "Coolidge Park",
+      "blurb": "Coolidge Park in Chattanooga",
+      "neighborhood": "",
+      "category": "Outdoors",
+      "tag": "Local"
+    },
+    {
+      "id": "renaissance-park",
+      "name": "Renaissance Park",
+      "blurb": "Renaissance Park in Chattanooga",
+      "neighborhood": "",
+      "category": "Outdoors",
+      "tag": "Local"
+    },
+    {
+      "id": "raccoon-mountain",
+      "name": "Raccoon Mountain",
+      "blurb": "Raccoon Mountain in Chattanooga",
+      "neighborhood": "",
+      "category": "Outdoors",
+      "tag": "Local"
+    },
+    {
+      "id": "sunset-rock",
+      "name": "Sunset Rock",
+      "blurb": "Sunset Rock in Chattanooga",
+      "neighborhood": "",
+      "category": "Outdoors",
+      "tag": "Local"
+    },
+    {
+      "id": "rock-city",
+      "name": "Rock City",
+      "blurb": "Rock City in Chattanooga",
+      "neighborhood": "",
+      "category": "Attractions",
+      "tag": "Local"
+    },
+    {
+      "id": "ruby-falls",
+      "name": "Ruby Falls",
+      "blurb": "Ruby Falls in Chattanooga",
+      "neighborhood": "",
+      "category": "Attractions",
+      "tag": "Local"
+    },
+    {
+      "id": "tennessee-aquarium",
+      "name": "Tennessee Aquarium",
+      "blurb": "Tennessee Aquarium in Chattanooga",
+      "neighborhood": "",
+      "category": "Attractions",
+      "tag": "Local"
+    },
+    {
+      "id": "creative-discovery-museum",
+      "name": "Creative Discovery Museum",
+      "blurb": "Creative Discovery Museum in Chattanooga",
+      "neighborhood": "",
+      "category": "Attractions",
+      "tag": "Local"
+    },
+    {
+      "id": "chattanooga-brewing-company",
+      "name": "Chattanooga Brewing Company",
+      "blurb": "Chattanooga Brewing Company in Chattanooga",
+      "neighborhood": "",
+      "category": "Nightlife",
+      "tag": "Local"
+    },
+    {
+      "id": "wanderlinger",
+      "name": "Wanderlinger",
+      "blurb": "Wanderlinger in Chattanooga",
+      "neighborhood": "",
+      "category": "Nightlife",
+      "tag": "Local"
+    },
+    {
+      "id": "terminal-brewhouse",
+      "name": "Terminal Brewhouse",
+      "blurb": "Terminal Brewhouse in Chattanooga",
+      "neighborhood": "",
+      "category": "Nightlife",
+      "tag": "Local"
+    },
+    {
+      "id": "big-river-grille",
+      "name": "Big River Grille",
+      "blurb": "Big River Grille in Chattanooga",
+      "neighborhood": "",
+      "category": "Nightlife",
+      "tag": "Local"
+    },
+    {
+      "id": "songbirds",
+      "name": "Songbirds",
+      "blurb": "Songbirds in Chattanooga",
+      "neighborhood": "",
+      "category": "Entertainment",
+      "tag": "Local"
+    },
+    {
+      "id": "track-29",
+      "name": "Track 29",
+      "blurb": "Track 29 in Chattanooga",
+      "neighborhood": "",
+      "category": "Entertainment",
+      "tag": "Local"
+    },
+    {
+      "id": "highway-24-27",
+      "name": "Highway 24/27",
+      "blurb": "Highway 24/27 in Chattanooga",
+      "neighborhood": "",
+      "category": "Transportation",
+      "tag": "Local"
+    },
+    {
+      "id": "i-75",
+      "name": "I-75",
+      "blurb": "I-75 in Chattanooga",
+      "neighborhood": "",
+      "category": "Transportation",
+      "tag": "Local"
+    },
+    {
+      "id": "carta",
+      "name": "CARTA",
+      "blurb": "CARTA in Chattanooga",
+      "neighborhood": "",
+      "category": "Transportation",
+      "tag": "Local"
+    },
+    {
+      "id": "walking",
+      "name": "Walking",
+      "blurb": "Walking in Chattanooga",
+      "neighborhood": "",
+      "category": "Transportation",
+      "tag": "Local"
+    },
+    {
+      "id": "uber",
+      "name": "Uber",
+      "blurb": "Uber in Chattanooga",
+      "neighborhood": "",
+      "category": "Transportation",
+      "tag": "Local"
+    },
+    {
+      "id": "lyft",
+      "name": "Lyft",
+      "blurb": "Lyft in Chattanooga",
+      "neighborhood": "",
+      "category": "Transportation",
+      "tag": "Local"
+    },
+    {
+      "id": "moon-pie",
+      "name": "Moon Pie",
+      "blurb": "Moon Pie in Chattanooga",
+      "neighborhood": "",
+      "category": "Quirky",
+      "tag": "Local"
+    },
+    {
+      "id": "little-debbie",
+      "name": "Little Debbie",
+      "blurb": "Little Debbie in Chattanooga",
+      "neighborhood": "",
+      "category": "Quirky",
+      "tag": "Local"
+    },
+    {
+      "id": "chattanooga",
+      "name": "Chattanooga",
+      "blurb": "Chattanooga in Chattanooga",
+      "neighborhood": "",
+      "category": "Quirky",
+      "tag": "Local"
+    },
+    {
+      "id": "knoxville",
+      "name": "Knoxville",
+      "blurb": "Knoxville in Chattanooga",
+      "neighborhood": "",
+      "category": "Quirky",
+      "tag": "Local"
+    },
+    {
+      "id": "epb-fiber",
+      "name": "EPB Fiber",
+      "blurb": "EPB Fiber in Chattanooga",
+      "neighborhood": "",
+      "category": "Home Services",
+      "tag": "Local"
+    },
+    {
+      "id": "comcast",
+      "name": "Comcast",
+      "blurb": "Comcast in Chattanooga",
+      "neighborhood": "",
+      "category": "Home Services",
+      "tag": "Local"
+    },
+    {
+      "id": "hamilton-place",
+      "name": "Hamilton Place",
+      "blurb": "Hamilton Place in Chattanooga",
+      "neighborhood": "",
+      "category": "Shopping",
+      "tag": "Local"
+    },
+    {
+      "id": "warehouse-row",
+      "name": "Warehouse Row",
+      "blurb": "Warehouse Row in Chattanooga",
+      "neighborhood": "",
+      "category": "Shopping",
+      "tag": "Local"
+    },
+    {
+      "id": "target",
+      "name": "Target",
+      "blurb": "Target in Chattanooga",
+      "neighborhood": "",
+      "category": "Shopping",
+      "tag": "Local"
+    },
+    {
+      "id": "walmart",
+      "name": "Walmart",
+      "blurb": "Walmart in Chattanooga",
+      "neighborhood": "",
+      "category": "Shopping",
+      "tag": "Local"
+    },
+    {
+      "id": "high-point-climbing",
+      "name": "High Point Climbing",
+      "blurb": "High Point Climbing in Chattanooga",
+      "neighborhood": "",
+      "category": "Fitness",
+      "tag": "Local"
+    },
+    {
+      "id": "tennessee-bouldering-authority",
+      "name": "Tennessee Bouldering Authority",
+      "blurb": "Tennessee Bouldering Authority in Chattanooga",
+      "neighborhood": "",
+      "category": "Fitness",
+      "tag": "Local"
+    },
+    {
+      "id": "orangetheory",
+      "name": "Orangetheory",
+      "blurb": "Orangetheory in Chattanooga",
+      "neighborhood": "",
+      "category": "Fitness",
+      "tag": "Local"
+    },
+    {
+      "id": "f45",
+      "name": "F45",
+      "blurb": "F45 in Chattanooga",
+      "neighborhood": "",
+      "category": "Fitness",
+      "tag": "Local"
+    },
+    {
+      "id": "chattanooga-fc",
+      "name": "Chattanooga FC",
+      "blurb": "Chattanooga FC in Chattanooga",
+      "neighborhood": "",
+      "category": "Sports",
+      "tag": "Local"
+    },
+    {
+      "id": "chattanooga-lookouts",
+      "name": "Chattanooga Lookouts",
+      "blurb": "Chattanooga Lookouts in Chattanooga",
+      "neighborhood": "",
+      "category": "Sports",
+      "tag": "Local"
+    },
+    {
+      "id": "utc",
+      "name": "UTC",
+      "blurb": "UTC in Chattanooga",
+      "neighborhood": "",
+      "category": "Education",
+      "tag": "Local"
+    },
+    {
+      "id": "covenant-college",
+      "name": "Covenant College",
+      "blurb": "Covenant College in Chattanooga",
+      "neighborhood": "",
+      "category": "Education",
+      "tag": "Local"
+    },
+    {
+      "id": "riverbend-festival",
+      "name": "Riverbend Festival",
+      "blurb": "Riverbend Festival in Chattanooga",
+      "neighborhood": "",
+      "category": "Events",
+      "tag": "Local"
+    },
+    {
+      "id": "moon-river-festival",
+      "name": "Moon River Festival",
+      "blurb": "Moon River Festival in Chattanooga",
+      "neighborhood": "",
+      "category": "Events",
+      "tag": "Local"
+    }
+  ],
+  "matchups": [
+    {
+      "id": "matchup-001",
+      "title": "Mountain Living Showdown",
+      "left_entry_id": "signal-mountain",
+      "right_entry_id": "lookout-mountain",
+      "category": "Places to Live",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-002",
+      "title": "Trendy vs Artsy",
+      "left_entry_id": "northshore",
+      "right_entry_id": "southside",
+      "category": "Places to Live",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-003",
+      "title": "Urban vs Historic",
+      "left_entry_id": "downtown",
+      "right_entry_id": "st.-elmo",
+      "category": "Places to Live",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-004",
+      "title": "Suburban Standoff",
+      "left_entry_id": "red-bank",
+      "right_entry_id": "east-brainerd",
+      "category": "Places to Live",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-005",
+      "title": "Family Neighborhoods",
+      "left_entry_id": "hixson",
+      "right_entry_id": "ooltewah",
+      "category": "Places to Live",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-006",
+      "title": "Elite Private School Battle",
+      "left_entry_id": "mccallie",
+      "right_entry_id": "baylor",
+      "category": "Education",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-007",
+      "title": "All-Girls Excellence",
+      "left_entry_id": "gps",
+      "right_entry_id": "baylor",
+      "category": "Education",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-008",
+      "title": "Christian School Clash",
+      "left_entry_id": "ccs",
+      "right_entry_id": "boyd-buchanan",
+      "category": "Education",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-009",
+      "title": "Grocery Giant Battle",
+      "left_entry_id": "publix",
+      "right_entry_id": "whole-foods",
+      "category": "Grocery",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-010",
+      "title": "Upscale Grocery Duel",
+      "left_entry_id": "fresh-market",
+      "right_entry_id": "whole-foods",
+      "category": "Grocery",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-011",
+      "title": "Warehouse Club Wars",
+      "left_entry_id": "costco",
+      "right_entry_id": "sams-club",
+      "category": "Grocery",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-012",
+      "title": "Local Market Matchup",
+      "left_entry_id": "gordons",
+      "right_entry_id": "tienda-la-carniceria",
+      "category": "Grocery",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-013",
+      "title": "Best Burger Showdown",
+      "left_entry_id": "tremont-tavern",
+      "right_entry_id": "main-st-meats",
+      "category": "Food",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-014",
+      "title": "Fast Food Burger Battle",
+      "left_entry_id": "five-guys",
+      "right_entry_id": "burger-king",
+      "category": "Food",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-015",
+      "title": "Coffee Shop Clash",
+      "left_entry_id": "velo-coffee",
+      "right_entry_id": "mean-mug",
+      "category": "Coffee",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-016",
+      "title": "Chain Coffee Wars",
+      "left_entry_id": "starbucks",
+      "right_entry_id": "dunkin",
+      "category": "Coffee",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-017",
+      "title": "Brunch Royale",
+      "left_entry_id": "bluegrass-grill",
+      "right_entry_id": "milk-and-honey",
+      "category": "Breakfast",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-018",
+      "title": "Waffle Wars",
+      "left_entry_id": "waffle-house",
+      "right_entry_id": "ihop",
+      "category": "Breakfast",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-019",
+      "title": "Pizza Perfection",
+      "left_entry_id": "lupis",
+      "right_entry_id": "mellow-mushroom",
+      "category": "Food",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-020",
+      "title": "Chain Pizza Battle",
+      "left_entry_id": "dominos",
+      "right_entry_id": "pizza-hut",
+      "category": "Food",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-021",
+      "title": "Best Park Showdown",
+      "left_entry_id": "coolidge-park",
+      "right_entry_id": "renaissance-park",
+      "category": "Outdoors",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-022",
+      "title": "Hiking Trail Battle",
+      "left_entry_id": "raccoon-mountain",
+      "right_entry_id": "sunset-rock",
+      "category": "Outdoors",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-023",
+      "title": "Tourist Trap Throwdown",
+      "left_entry_id": "rock-city",
+      "right_entry_id": "ruby-falls",
+      "category": "Attractions",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-024",
+      "title": "Family Fun Faceoff",
+      "left_entry_id": "tennessee-aquarium",
+      "right_entry_id": "creative-discovery-museum",
+      "category": "Attractions",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-025",
+      "title": "Brewery Battle",
+      "left_entry_id": "chattanooga-brewing-company",
+      "right_entry_id": "wanderlinger",
+      "category": "Nightlife",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-026",
+      "title": "Gastropub Duel",
+      "left_entry_id": "terminal-brewhouse",
+      "right_entry_id": "big-river-grille",
+      "category": "Nightlife",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-027",
+      "title": "Music Venue Showdown",
+      "left_entry_id": "songbirds",
+      "right_entry_id": "track-29",
+      "category": "Entertainment",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-028",
+      "title": "Highway Showdown",
+      "left_entry_id": "highway-24-27",
+      "right_entry_id": "i-75",
+      "category": "Transportation",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-029",
+      "title": "Getting Around Town",
+      "left_entry_id": "carta",
+      "right_entry_id": "walking",
+      "category": "Transportation",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-030",
+      "title": "Ride Share Wars",
+      "left_entry_id": "uber",
+      "right_entry_id": "lyft",
+      "category": "Transportation",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-031",
+      "title": "Snack Cake Supremacy",
+      "left_entry_id": "moon-pie",
+      "right_entry_id": "little-debbie",
+      "category": "Quirky",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-032",
+      "title": "City Rivalry",
+      "left_entry_id": "chattanooga",
+      "right_entry_id": "knoxville",
+      "category": "Quirky",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-033",
+      "title": "Internet Battle",
+      "left_entry_id": "epb-fiber",
+      "right_entry_id": "comcast",
+      "category": "Home Services",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-034",
+      "title": "Mall Wars",
+      "left_entry_id": "hamilton-place",
+      "right_entry_id": "warehouse-row",
+      "category": "Shopping",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-035",
+      "title": "Big Box Battle",
+      "left_entry_id": "target",
+      "right_entry_id": "walmart",
+      "category": "Shopping",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-036",
+      "title": "Climbing Gym Clash",
+      "left_entry_id": "high-point-climbing",
+      "right_entry_id": "tennessee-bouldering-authority",
+      "category": "Fitness",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-037",
+      "title": "Boutique Fitness Battle",
+      "left_entry_id": "orangetheory",
+      "right_entry_id": "f45",
+      "category": "Fitness",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-038",
+      "title": "Local Sports Showdown",
+      "left_entry_id": "chattanooga-fc",
+      "right_entry_id": "chattanooga-lookouts",
+      "category": "Sports",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-039",
+      "title": "College Clash",
+      "left_entry_id": "utc",
+      "right_entry_id": "covenant-college",
+      "category": "Education",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    },
+    {
+      "id": "matchup-040",
+      "title": "Festival Faceoff",
+      "left_entry_id": "riverbend-festival",
+      "right_entry_id": "moon-river-festival",
+      "category": "Events",
+      "active": false,
+      "starts_at": "",
+      "ends_at": "",
+      "cadence": "daily",
+      "message": ""
+    }
+  ]
+}

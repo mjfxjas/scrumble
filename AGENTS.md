@@ -65,7 +65,52 @@
 - Fingerprinting uses localStorage (`scrumble-fp`) to track votes per device
 - User submissions stored in DynamoDB with `SUBMISSION` partition key
 
-## Recent Changes (Latest Session)
+## Recent Changes (Latest Session - 2025-01-23)
+- **Email Forwarding:**
+  - SES configured for hello@scrumble.cc → jon@theatrico.org
+  - Domain verified, MX records added
+  - Lambda forwarder function deployed
+  - S3 bucket for email storage
+- **Custom Comment System:**
+  - DynamoDB table: scrumble-comments
+  - GET /comments, POST /comment, DELETE /comment endpoints
+  - Expandable comment sections on matchup cards
+  - Comment counts displayed before expanding
+  - Seed comments feature (20 pre-written templates)
+  - Admin-only delete with stored session key
+  - 500 char limit, 50 char name limit
+  - Zero third-party branding
+- **Admin Mode Overlay:**
+  - "Admin" button in navbar (prompts for key)
+  - Session-based auth (stored in sessionStorage)
+  - Admin controls on each matchup card:
+    - Edit (ends_at, message)
+    - Reset Votes
+    - Seed Comments (1-10 random comments)
+    - Activate/Deactivate
+    - Delete
+  - Comment delete buttons only visible in admin mode
+  - Removed local "Edit" panel (replaced with admin overlay)
+- **Admin Dashboard Redesign:**
+  - New `/admin/` page with stats cards
+  - Total Visits, Real Visits, Active/Total matchup counts
+  - Split view: Active Matchups / Inactive Matchups
+  - Schedule button for each matchup (set starts_at/ends_at)
+  - Activate/Deactivate buttons
+  - Shows scheduled dates on matchup cards
+- **UI Improvements:**
+  - Rotating poster backgrounds on hero (disabled due to 403 errors)
+  - Random poster on page load
+  - Fighter background images at 75% opacity (100% when selected, 25% when not)
+  - Removed "Local" tag filter (all entries are local)
+  - Vote counts/percentages moved into button after voting
+  - Increased scroll delay after voting (800ms → 1600ms)
+  - Mobile: Side-by-side fighter layout, VS box hidden
+  - Mobile: Navbar height increased (300px → 400px)
+  - Favicon added (public/scrumble_favicon.ico)
+  - "Art" link in navbar → posters.html
+  - Info grid updated with Chattanooga aliases
+  - "Bring the heat" links to submit page
 - **Admin Panel Redesign:**
   - Card-based layout with real-time stats (votes, percentages)
   - Inline editing for end times and banner messages

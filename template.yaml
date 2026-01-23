@@ -44,6 +44,11 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ScrumbleTable
+        - Statement:
+          - Effect: Allow
+            Action:
+              - cloudwatch:PutMetricData
+            Resource: '*'
       FunctionUrlConfig:
         AuthType: NONE
 

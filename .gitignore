@@ -3,3 +3,53 @@ logs/
 .DS_Store
 .context
 **/.context
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+*.egg-info/
+
+# Node
+node_modules/
+*.log
+npm-debug.log*
+
+# Lambda deployment
+*.zip
+function.zip
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Secrets
+.env
+.env.local
+samconfig.toml.local
+
+# Media (large files - store in S3)
+public/SCRUMBLE_POSTERS/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.mov
+*.avi
+*.webm
+*.avif
+*.webp
+!public/scrumble_favicon.ico
+!public/white_duck_logo.png
+!public/berk.avif
+!public/bob_corker.avif
