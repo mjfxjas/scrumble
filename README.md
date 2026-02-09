@@ -36,6 +36,13 @@ scrumble/
 └── autodeploy.sh         # One-command deployment
 ```
 
+## Requirements
+
+- Python 3.x (Lambda handler + seed script)
+- AWS SAM CLI (build/deploy)
+- AWS CLI (S3 sync + CloudFront invalidation)
+
+
 ## Quick Start
 
 ### Deploy Everything
@@ -55,7 +62,7 @@ python3 scripts/seed.py scrumble-data
 
 ### Local Development
 - Open `app/index.html` in browser for frontend
-- Set API URL in `app/config.js`
+- Set API URL in `app/config.js` (`window.SCRUMBLE_API_BASE`)
 - Admin panel: `app/admin/index.html` (or `https://scrumble.cc/admin`)
 - History: `app/history.html`
 
@@ -116,6 +123,11 @@ python3 scripts/seed.py scrumble-data
 **DynamoDB Table:** scrumble-data
 **Admin Key:** Set via SAM deploy prompts; admin UI stores it in sessionStorage
 **CloudFront Invalidation:** set `SCRUMBLE_CF_DISTRIBUTION_ID` for `./autodeploy.sh`
+
+## Environment Variables
+
+- `SCRUMBLE_BUCKET` (default: `scrumble.cc`) for `./autodeploy.sh`
+- `SCRUMBLE_CF_DISTRIBUTION_ID` (default: `E2F6VQWXTCO8OB`) for `./autodeploy.sh`
 
 ## Development Notes
 
