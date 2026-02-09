@@ -270,6 +270,15 @@ def handler(event, context):
             if not valid:
                 return json_response(400, headers, {'error': error})
             return post_comment(body, headers)
+        elif path == '/comment/vote' and method == 'POST':
+            body = parse_body(event)
+            return vote_comment(body, headers)
+        elif path == '/matchup/rate' and method == 'POST':
+            body = parse_body(event)
+            valid, error = validate_request(method, body, ['matchup_id', 'rating'])
+            if not valid:
+                return json_response(400, headers, {'error': error})
+            return rate_matchup(body, headers)
         elif path.startswith('/comment/') and method == 'DELETE':
             allowed, failure = require_admin(event, headers)
             if not allowed:
@@ -307,9 +316,6 @@ def build_matchup_payload(matchup, entries_cache=None, votes_cache=None):
         votes = vote_resp.get('Item', {'left': 0, 'right': 0})
 
     base_boost = 150
-    hours_since_epoch = int(time.time()) // 3600
-    time_boost_left = (hours_since_epoch * 3) % 7
-    time_boost_right = (hours_since_epoch * 2) % 5
 
     return {
         'matchup': {
@@ -342,8 +348,8 @@ def build_matchup_payload(matchup, entries_cache=None, votes_cache=None):
             'address': right.get('address', '')
         },
         'votes': {
-            'left': int(votes.get('left', 0)) + base_boost + time_boost_left,
-            'right': int(votes.get('right', 0)) + base_boost + time_boost_right
+            'left': int(votes.get('left', 0)) + base_boost,
+            'right': int(votes.get('right', 0)) + base_boost
         }
     }
 
@@ -957,8 +963,13 @@ def get_comments(matchup_id, headers):
             'author_name': item.get('author_name', 'Anonymous'),
             'comment_text': item.get('comment_text', ''),
             'timestamp': item.get('sk', '').replace('TIMESTAMP#', ''),
-            'created_at': item.get('created_at', '')
+            'created_at': item.get('created_at', ''),
+            'upvotes': int(item.get('upvotes', 0)),
+            'downvotes': int(item.get('downvotes', 0))
         })
+    
+    # Sort by score (upvotes - downvotes)
+    comments.sort(key=lambda c: c['upvotes'] - c['downvotes'], reverse=True)
     
     return json_response(200, headers, {'comments': comments}, cache_seconds=30)
 
@@ -987,10 +998,53 @@ def post_comment(body, headers):
         'author_name': author_name,
         'comment_text': comment_text,
         'fingerprint': fingerprint,
-        'created_at': datetime.utcnow().isoformat()
+        'created_at': datetime.utcnow().isoformat(),
+        'upvotes': 0,
+        'downvotes': 0
     })
     
     log('INFO', 'Comment posted', matchup_id=matchup_id, author=author_name)
+    return json_response(200, headers, {'ok': True})
+
+
+def vote_comment(body, headers):
+    """Vote on a comment (upvote or downvote)"""
+    matchup_id = body.get('matchup_id')
+    timestamp = body.get('timestamp')
+    vote_type = body.get('vote_type')  # 'up' or 'down'
+    fingerprint = body.get('fingerprint', 'anon')
+    
+    if not matchup_id or not timestamp or vote_type not in ['up', 'down']:
+        return json_response(400, headers, {'error': 'Invalid vote'})
+    
+    comments_table = dynamodb.Table('scrumble-comments')
+    
+    # Check if already voted
+    vote_key = f'VOTE#{matchup_id}#{timestamp}#{fingerprint}'
+    existing = comments_table.get_item(
+        Key={'pk': 'COMMENT_VOTE', 'sk': vote_key}
+    ).get('Item')
+    
+    if existing:
+        return json_response(400, headers, {'error': 'Already voted'})
+    
+    # Record vote
+    comments_table.put_item(Item={
+        'pk': 'COMMENT_VOTE',
+        'sk': vote_key,
+        'vote_type': vote_type,
+        'created_at': datetime.utcnow().isoformat()
+    })
+    
+    # Update comment vote count
+    field = 'upvotes' if vote_type == 'up' else 'downvotes'
+    comments_table.update_item(
+        Key={'pk': f'COMMENT#{matchup_id}', 'sk': f'TIMESTAMP#{timestamp}'},
+        UpdateExpression=f'ADD {field} :inc',
+        ExpressionAttributeValues={':inc': 1}
+    )
+    
+    log('INFO', 'Comment vote', matchup_id=matchup_id, timestamp=timestamp, vote_type=vote_type)
     return json_response(200, headers, {'ok': True})
 
 
@@ -1010,3 +1064,39 @@ def delete_comment(matchup_id, timestamp, headers):
     except Exception as e:
         log('ERROR', 'Delete comment failed', error=str(e))
         return json_response(500, headers, {'error': str(e)})
+
+
+def rate_matchup(body, headers):
+    """Rate a matchup (good/bad)"""
+    matchup_id = body.get('matchup_id')
+    rating = body.get('rating')  # 'good' or 'bad'
+    fingerprint = body.get('fingerprint', 'anon')
+    
+    if rating not in ['good', 'bad']:
+        return json_response(400, headers, {'error': 'Invalid rating'})
+    
+    # Check if already rated
+    rate_key = {'pk': f'MATCHUP_RATING#{matchup_id}', 'sk': f'VOTE#{fingerprint}'}
+    existing = table.get_item(Key=rate_key).get('Item')
+    
+    if existing:
+        return json_response(400, headers, {'error': 'Already rated'})
+    
+    # Record rating
+    table.put_item(Item={
+        'pk': f'MATCHUP_RATING#{matchup_id}',
+        'sk': f'VOTE#{fingerprint}',
+        'rating': rating,
+        'created_at': datetime.utcnow().isoformat()
+    })
+    
+    # Update aggregate
+    field = 'good_count' if rating == 'good' else 'bad_count'
+    table.update_item(
+        Key={'pk': f'MATCHUP_RATING#{matchup_id}', 'sk': 'AGGREGATE'},
+        UpdateExpression=f'ADD {field} :inc',
+        ExpressionAttributeValues={':inc': 1}
+    )
+    
+    log('INFO', 'Matchup rated', matchup_id=matchup_id, rating=rating)
+    return json_response(200, headers, {'ok': True})

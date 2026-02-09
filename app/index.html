@@ -3,27 +3,56 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Scenic City Rumble</title>
+    <title>Scrumble - Vote on Chattanooga's Best Restaurants, Businesses & More</title>
     <link rel="icon" type="image/x-icon" href="public/scrumble_favicon.ico" />
+    <link rel="canonical" href="https://scrumble.cc/" />
     <meta
       name="description"
-      content="Two local favorites enter. You pick the winner."
+      content="Daily matchups for Chattanooga. Vote on the best tacos, coffee, mayors, and more. See what the city really thinks."
     />
+    <meta name="keywords" content="Chattanooga, voting, local businesses, restaurants, best of Chattanooga, Scenic City" />
     
     <!-- Open Graph / Social Media Meta Tags -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Scenic City Rumble" />
-    <meta property="og:description" content="Two local favorites enter. You pick the winner. Vote on Chattanooga's best food, music, and local gems." />
+    <meta property="og:title" content="Scrumble - Vote on Chattanooga's Best" />
+    <meta property="og:description" content="Daily matchups for Chattanooga. Vote on the best tacos, coffee, mayors, and more. See what the city really thinks." />
     <meta property="og:url" content="https://scrumble.cc" />
-    <meta property="og:site_name" content="Scenic City Rumble" />
+    <meta property="og:site_name" content="Scrumble" />
     <meta property="og:image" content="https://scrumble.cc/public/white_duck_logo.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Scrumble - Chattanooga voting game" />
+    <meta property="og:locale" content="en_US" />
     
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Scenic City Rumble" />
-    <meta name="twitter:description" content="Two local favorites enter. You pick the winner." />
+    <meta name="twitter:title" content="Scrumble - Vote on Chattanooga's Best" />
+    <meta name="twitter:description" content="Daily matchups for Chattanooga. Vote on the best tacos, coffee, mayors, and more." />
     <meta name="twitter:image" content="https://scrumble.cc/public/white_duck_logo.png" />
+    <meta name="twitter:image:alt" content="Scrumble - Chattanooga voting game" />
+    <meta name="twitter:site" content="@scrumble" />
+    <meta name="twitter:creator" content="@scrumble" />
+    
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Scrumble",
+      "alternateName": "Scenic City Rumble",
+      "url": "https://scrumble.cc",
+      "description": "Daily matchups for Chattanooga. Vote on the best tacos, coffee, mayors, and more.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://scrumble.cc/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "Chattanooga",
+        "@id": "https://www.wikidata.org/wiki/Q186702"
+      }
+    }
+    </script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -56,7 +85,7 @@
     <div class="page">
       <header class="hero">
         <div class="hero-bg" id="hero-bg"></div>
-        <h1 class="hero-title">
+        <h1 class="hero-title" role="heading" aria-level="1">
           <span class="hero-word hero-word-1">SCENIC</span>
           <span class="hero-word hero-word-2">CITY</span>
           <span class="hero-word hero-word-3">RUMBLE</span>
@@ -72,7 +101,7 @@
         <section class="arena" id="arena">
           <div class="arena-header">
             <div>
-              <h2>Today's Matchups</h2>
+              <h2>What's Better in Chattanooga?</h2>
             </div>
             <div class="arena-badge">Live</div>
           </div>
@@ -129,8 +158,105 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <!-- Coming Soon Overlay -->
+    <div class="coming-soon-overlay" id="coming-soon-overlay">
+      <div class="coming-soon-content">
+        <h1 class="coming-soon-title">COMING SOON</h1>
+        <p class="coming-soon-subtitle">Chattanooga's daily voting platform. Two local favorites enter. You pick the winner.</p>
+        
+        <form class="email-form" id="emailForm">
+          <input 
+            type="email" 
+            class="email-input" 
+            placeholder="your@email.com" 
+            required 
+            id="emailInput"
+          >
+          <button type="submit" class="email-submit" id="submitBtn">Notify Me</button>
+        </form>
+        
+        <div class="success-message" id="successMsg">✓ You're on the list!</div>
+        <div class="launch-date">Launching Soon</div>
+        
+        <button class="admin-bypass-btn" id="adminBypassBtn">Admin Access</button>
+      </div>
+    </div>
+
     <script src="config.js"></script>
     <script src="theme.js"></script>
     <script src="main.js"></script>
+    <script>
+      // Coming soon overlay control
+      const overlay = document.getElementById('coming-soon-overlay');
+      const form = document.getElementById('emailForm');
+      const input = document.getElementById('emailInput');
+      const btn = document.getElementById('submitBtn');
+      const success = document.getElementById('successMsg');
+      const adminBtn = document.getElementById('adminBypassBtn');
+      
+      // Check if bypass is active
+      if (sessionStorage.getItem('scrumble-bypass') === 'true') {
+        overlay.style.display = 'none';
+      }
+      
+      // Admin bypass button
+      adminBtn.addEventListener('click', () => {
+        const key = prompt('Enter admin key:');
+        if (key && key === window.SCRUMBLE_ADMIN_KEY) {
+          sessionStorage.setItem('scrumble-bypass', 'true');
+          overlay.style.display = 'none';
+        } else if (key) {
+          alert('Invalid admin key');
+        }
+      });
+      
+      // Admin bypass: Shift+A+D+M
+      let keySequence = [];
+      const adminSequence = ['SHIFT', 'A', 'D', 'M'];
+      
+      document.addEventListener('keydown', (e) => {
+        const key = e.key.toUpperCase();
+        if (e.shiftKey && key !== 'SHIFT') {
+          keySequence.push('SHIFT', key);
+        } else if (!e.shiftKey) {
+          keySequence.push(key);
+        }
+        
+        if (keySequence.length > 4) {
+          keySequence = keySequence.slice(-4);
+        }
+        
+        if (keySequence.join('') === adminSequence.join('')) {
+          sessionStorage.setItem('scrumble-bypass', 'true');
+          overlay.style.display = 'none';
+          keySequence = [];
+        }
+      });
+      
+      // Email form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = input.value.trim();
+        
+        if (!email) return;
+        
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+        
+        try {
+          const emails = JSON.parse(localStorage.getItem('scrumble-emails') || '[]');
+          if (!emails.includes(email)) {
+            emails.push(email);
+            localStorage.setItem('scrumble-emails', JSON.stringify(emails));
+          }
+          
+          form.style.display = 'none';
+          success.classList.add('show');
+        } catch (err) {
+          btn.textContent = 'Try Again';
+          btn.disabled = false;
+        }
+      });
+    </script>
   </body>
 </html>

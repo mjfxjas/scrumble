@@ -643,7 +643,9 @@ function buildMatchupCard(matchupData, index, anchor) {
   const rightLabel = matchupData.right?.name || "Right";
   if (hasVoted) {
     const votedLabel = votedSide === "left" ? leftLabel : rightLabel;
-    badge.textContent = `Voted: ${votedLabel}`;
+    const votedCount = votedSide === "left" ? votes.left : votes.right;
+    const isMajority = votedCount > (total / 2);
+    badge.innerHTML = `Voted: ${votedLabel}<br><span style="font-size: 0.85em; opacity: 0.9;">${isMajority ? "You're in the majority" : "You're in the minority"}</span>`;
     badge.classList.add("is-visible");
   } else {
     badge.textContent = "You voted";
@@ -666,12 +668,6 @@ function buildMatchupCard(matchupData, index, anchor) {
 
   const actions = document.createElement("div");
   actions.className = "matchup-actions";
-  const share = document.createElement("a");
-  share.className = "share-link";
-  share.href = `#${anchor}`;
-  share.textContent = "Share this matchup";
-  if (hasVoted) share.classList.add("is-visible");
-  actions.appendChild(share);
   
   const commentsBtn = document.createElement("button");
   commentsBtn.className = "comments-toggle";
@@ -679,6 +675,13 @@ function buildMatchupCard(matchupData, index, anchor) {
   commentsBtn.dataset.matchupId = matchupId;
   commentsBtn.id = `comments-btn-${matchupId}`;
   actions.appendChild(commentsBtn);
+  
+  const share = document.createElement("a");
+  share.className = "share-link";
+  share.href = `#${anchor}`;
+  share.textContent = "Share";
+  if (hasVoted) share.classList.add("is-visible");
+  actions.appendChild(share);
   
   const commentsSection = document.createElement("div");
   commentsSection.className = "comments-section";
@@ -902,9 +905,22 @@ async function vote(side, btn) {
     saveVotedState(matchupId, actualSide);
     
     matchup.votes[actualSide] += 1;
+    
+    const total = matchup.votes.left + matchup.votes.right;
+    const votedCount = matchup.votes[actualSide];
+    const isMajority = votedCount > (total / 2);
+    
     render();
-
+    
     const card = document.querySelector(`.matchup-card[data-matchup-id="${matchupId}"]`);
+    if (card) {
+      const badge = card.querySelector('.vote-badge');
+      if (badge) {
+        const votedLabel = actualSide === "left" ? matchup.left.name : matchup.right.name;
+        badge.innerHTML = `Voted: ${votedLabel}<br><span style="font-size: 0.85em; opacity: 0.9;">${isMajority ? "You're in the majority" : "You're in the minority"}</span>`;
+      }
+    }
+
     if (card) {
       card.classList.add("vote-confirm");
       setTimeout(() => card.classList.remove("vote-confirm"), 500);
@@ -918,6 +934,9 @@ async function vote(side, btn) {
     const nextMatchupIdx = getNextUnvotedIndex();
     if (nextMatchupIdx >= 0) {
       setTimeout(() => scrollToMatchupIndex(nextMatchupIdx), 1600);
+    } else {
+      // All matchups voted - show rating prompt
+      setTimeout(() => showBatchRatingPrompt(), 1600);
     }
   } catch (err) {
     console.error("Vote failed:", err);
@@ -1255,6 +1274,13 @@ document.body.addEventListener('click', async (e) => {
     const timestamp = e.target.dataset.timestamp;
     await deleteComment(matchupId, timestamp);
   }
+  
+  if (e.target.classList.contains('vote-btn')) {
+    const matchupId = e.target.dataset.matchupId;
+    const timestamp = e.target.dataset.timestamp;
+    const voteType = e.target.classList.contains('vote-up') ? 'up' : 'down';
+    await voteComment(matchupId, timestamp, voteType);
+  }
 });
 
 async function loadComments(matchupId) {
@@ -1275,13 +1301,22 @@ async function loadComments(matchupId) {
       </div>
       <div class="comment-list">
         ${comments.length === 0 ? '<div class="comment-empty">No comments yet. Be the first!</div>' : ''}
-        ${comments.map(c => `
+        ${comments.map(c => {
+          const score = c.upvotes - c.downvotes;
+          return `
           <div class="comment">
-            <div class="comment-author">${c.author_name}</div>
+            <div class="comment-header">
+              <div class="comment-author">${c.author_name}</div>
+              <div class="comment-votes">
+                <button class="vote-btn vote-up" data-matchup-id="${matchupId}" data-timestamp="${c.timestamp}">👍 ${c.upvotes}</button>
+                <span class="vote-score">${score > 0 ? '+' : ''}${score}</span>
+                <button class="vote-btn vote-down" data-matchup-id="${matchupId}" data-timestamp="${c.timestamp}">👎 ${c.downvotes}</button>
+              </div>
+            </div>
             <div class="comment-text">${c.comment_text}</div>
             ${adminMode ? `<button class="comment-delete" data-matchup-id="${matchupId}" data-timestamp="${c.timestamp}">Delete</button>` : ''}
           </div>
-        `).join('')}
+        `}).join('')}
       </div>
     `;
   } catch (err) {
@@ -1575,3 +1610,127 @@ async function seedComments(matchupId) {
 }
 
 checkAdminMode();
+
+
+async function voteComment(matchupId, timestamp, voteType) {
+  const fingerprint = getFingerprint();
+  
+  try {
+    await fetchWithRetry(`${API_URL}/comment/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchup_id: matchupId, timestamp, vote_type: voteType, fingerprint })
+    });
+    
+    // Add voted class to clicked button
+    const section = document.getElementById(`comments-${matchupId}`);
+    const btn = section.querySelector(`.vote-${voteType}[data-timestamp="${timestamp}"]`);
+    if (btn) btn.classList.add('voted');
+    
+    await loadComments(matchupId);
+  } catch (err) {
+    showToast(err.message || 'Already voted');
+  }
+}
+
+
+// Matchup Rating
+function showBatchRatingPrompt() {
+  // Get all voted matchups that haven't been rated
+  const unratedMatchups = state.matchups.filter(m => {
+    const matchupId = m.matchup.id;
+    const voted = state.voted && state.voted[matchupId];
+    const rated = sessionStorage.getItem(`rated-${matchupId}`);
+    return voted && !rated;
+  });
+  
+  if (unratedMatchups.length === 0) return;
+  
+  const modal = document.createElement('div');
+  modal.className = 'rating-modal';
+  modal.innerHTML = `
+    <div class="rating-overlay"></div>
+    <div class="rating-content">
+      <div class="rating-title">How were today's matchups?</div>
+      <div class="rating-subtitle">${unratedMatchups.length} matchup${unratedMatchups.length > 1 ? 's' : ''} to rate</div>
+      <div class="rating-buttons">
+        <button class="btn vote rating-btn" data-rating="good">👍 Good</button>
+        <button class="btn ghost rating-btn" data-rating="bad">👎 Not Great</button>
+        <button class="btn link rating-skip">Skip</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  modal.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('rating-btn')) {
+      const rating = e.target.dataset.rating;
+      // Rate all unrated matchups
+      for (const matchup of unratedMatchups) {
+        await rateMatchup(matchup.matchup.id, rating);
+      }
+      modal.remove();
+    }
+    
+    if (e.target.classList.contains('rating-skip') || e.target.classList.contains('rating-overlay')) {
+      // Mark all as skipped
+      unratedMatchups.forEach(m => {
+        sessionStorage.setItem(`rated-${m.matchup.id}`, 'skipped');
+      });
+      modal.remove();
+    }
+  });
+  
+  setTimeout(() => modal.classList.add('show'), 10);
+}
+
+function showRatingPrompt(matchupId) {
+  const modal = document.createElement('div');
+  modal.className = 'rating-modal';
+  modal.innerHTML = `
+    <div class="rating-overlay"></div>
+    <div class="rating-content">
+      <div class="rating-title">Was this a good matchup?</div>
+      <div class="rating-buttons">
+        <button class="btn vote rating-btn" data-rating="good">👍 Yes</button>
+        <button class="btn ghost rating-btn" data-rating="bad">👎 No</button>
+        <button class="btn link rating-skip">Skip</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  modal.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('rating-btn')) {
+      const rating = e.target.dataset.rating;
+      await rateMatchup(matchupId, rating);
+      modal.remove();
+    }
+    
+    if (e.target.classList.contains('rating-skip') || e.target.classList.contains('rating-overlay')) {
+      sessionStorage.setItem(`rated-${matchupId}`, 'skipped');
+      modal.remove();
+    }
+  });
+  
+  setTimeout(() => modal.classList.add('show'), 10);
+}
+
+async function rateMatchup(matchupId, rating) {
+  const fingerprint = getFingerprint();
+  
+  try {
+    await fetchWithRetry(`${API_URL}/matchup/rate`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({matchup_id: matchupId, rating, fingerprint})
+    });
+    
+    sessionStorage.setItem(`rated-${matchupId}`, rating);
+    showToast(rating === 'good' ? 'Thanks for the feedback!' : 'Thanks, we\'ll improve!');
+  } catch (err) {
+    console.error('Rating failed:', err);
+  }
+}
