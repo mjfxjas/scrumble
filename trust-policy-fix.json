@@ -13,9 +13,8 @@
         },
         "StringLike": {
           "token.actions.githubusercontent.com:sub": [
-            "repo:<your_github_owner>/<your_repo_name>:environment:production",
-            "repo:<your_github_owner>/<your_repo_name>:ref:refs/heads/main",
-            "repo:<your_github_owner>/<your_repo_name>:workflow_dispatch"
+            "repo:mjfxjas/scrumble:environment:production",
+            "repo:mjfxjas/scrumble:environment:staging"
           ]
         }
       }
