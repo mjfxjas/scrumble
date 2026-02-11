@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::147795258921:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": [
+            "repo:<your_github_owner>/<your_repo_name>:environment:production",
+            "repo:<your_github_owner>/<your_repo_name>:ref:refs/heads/main",
+            "repo:<your_github_owner>/<your_repo_name>:workflow_dispatch"
+          ]
+        }
+      }
+    }
+  ]
+}
