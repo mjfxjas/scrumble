@@ -95,6 +95,27 @@ Required secrets:
 - `AWS_REGION`
 - `ADMIN_KEY`
 
+## Existing Prod Stack Adoption
+
+If prod infrastructure was originally created by SAM, import it before first Terraform prod apply:
+
+1. Update `environments/prod/terraform.tfvars` with the real Lambda physical name.
+2. Run imports:
+
+```bash
+export TF_VAR_admin_key="$ADMIN_KEY"
+
+terraform -chdir=terraform import -var-file="environments/prod/terraform.tfvars" \
+  module.dynamodb.aws_dynamodb_table.scrumble <prod-table-name>
+
+terraform -chdir=terraform import -var-file="environments/prod/terraform.tfvars" \
+  module.lambda.aws_lambda_function.scrumble <prod-lambda-function-name>
+```
+
+Current prod values:
+- `table_name = "scrumble-data"`
+- `function_name = "sam-app-ScrumbleFunction-D5sPLYeqku97"`
+
 ## Rollback
 
 See rollback runbook:

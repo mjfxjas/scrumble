@@ -45,7 +45,41 @@ Use workflow: `.github/workflows/terraform-infra.yml`
 1. Dispatch with `environment=dev`, `action=plan`
 2. Review output
 3. Dispatch with `environment=dev`, `action=apply`
-4. Repeat for `prod`
+4. For `prod`, follow the migration step below before first `apply`
+
+## 4a) Prod migration (existing SAM stack)
+
+If prod resources already exist from SAM/CloudFormation, import them into Terraform state before first prod apply.
+
+1. Set `terraform/environments/prod/terraform.tfvars` `function_name` to the real physical Lambda name.
+2. Initialize prod backend and export admin key for non-interactive runs:
+
+```bash
+export TF_VAR_admin_key="$ADMIN_KEY"
+
+terraform -chdir=terraform init -reconfigure \
+  -backend-config="bucket=<TF_STATE_BUCKET>" \
+  -backend-config="key=scrumble/prod/terraform.tfstate" \
+  -backend-config="region=<AWS_REGION>" \
+  -backend-config="dynamodb_table=<TF_STATE_LOCK_TABLE>" \
+  -backend-config="encrypt=true"
+```
+
+3. Import existing resources:
+
+```bash
+terraform -chdir=terraform import -var-file="environments/prod/terraform.tfvars" \
+  module.dynamodb.aws_dynamodb_table.scrumble <prod-table-name>
+
+terraform -chdir=terraform import -var-file="environments/prod/terraform.tfvars" \
+  module.lambda.aws_lambda_function.scrumble <prod-lambda-function-name>
+```
+
+4. Run prod plan in CI (`environment=prod`, `action=plan`) and apply once clean.
+
+Known current prod mapping:
+- Table: `scrumble-data`
+- Lambda: `sam-app-ScrumbleFunction-D5sPLYeqku97`
 
 ## 5) Post-deploy validation
 

@@ -150,6 +150,10 @@ Scrumble now includes a production-style IaC/ops scaffold:
 - CI Terraform deploy path (`.github/workflows/terraform-infra.yml`)
 - Rollback and first-deploy runbooks (`runbooks/rollback-terraform.md`, `docs/ops/terraform-first-deploy.md`)
 
+Prod note:
+- Existing SAM-created prod resources are now adopted into Terraform state (DynamoDB + Lambda).
+- `terraform/environments/prod/terraform.tfvars` is pinned to the real Lambda physical name to avoid import/apply failures.
+
 ## CI/CD (Low Cost)
 
 ### Continuous Integration
