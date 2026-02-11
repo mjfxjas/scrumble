@@ -129,6 +129,7 @@ data "aws_iam_policy_document" "terraform_deploy" {
       "sns:Subscribe",
       "sns:Unsubscribe",
       "sns:ListSubscriptionsByTopic",
+      "sns:ListTagsForResource",
       "sns:TagResource",
       "sns:UntagResource",
 
