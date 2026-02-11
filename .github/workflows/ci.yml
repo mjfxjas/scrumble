@@ -27,15 +27,20 @@ jobs:
       - name: Compile Python sources
         run: |
           python - <<'PY'
-          import glob
+          import pathlib
           import py_compile
 
+          roots = ["backend", "scripts"]
+          excluded_parts = {".venv", "venv", "__pycache__", ".aws-sam"}
           files = []
-          files.extend(glob.glob("backend/*.py"))
-          files.extend(glob.glob("scripts/*.py"))
-          files.append("list_all_data.py")
 
-          for path in files:
+          for root in roots:
+              for path in pathlib.Path(root).rglob("*.py"):
+                  if any(part in excluded_parts for part in path.parts):
+                      continue
+                  files.append(str(path))
+
+          for path in sorted(files):
               py_compile.compile(path, doraise=True)
           print(f"compiled {len(files)} Python files")
           PY
