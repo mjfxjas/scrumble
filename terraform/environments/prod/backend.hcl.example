@@ -1,0 +1,5 @@
+bucket         = "scrumble-terraform-state"
+key            = "scrumble/prod/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "scrumble-terraform-locks"
+encrypt        = true

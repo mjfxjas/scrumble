@@ -139,6 +139,17 @@ python3 scripts/seed.py scrumble-data
 - `SCRUMBLE_BUCKET` (default: `scrumble.cc`) for `./autodeploy.sh`
 - `SCRUMBLE_CF_DISTRIBUTION_ID` (default: `E2F6VQWXTCO8OB`) for `./autodeploy.sh`
 
+
+## Flagship Infra + Ops Path
+
+Scrumble now includes a production-style IaC/ops scaffold:
+- Terraform environment separation (`terraform/environments/dev`, `terraform/environments/prod`)
+- Remote state backend templates (`backend.hcl.example`)
+- OIDC least-privilege bootstrap module (`terraform/bootstrap/oidc`)
+- CloudWatch alarms + dashboard module (`terraform/modules/monitoring`)
+- CI Terraform deploy path (`.github/workflows/terraform-infra.yml`)
+- Rollback and first-deploy runbooks (`runbooks/rollback-terraform.md`, `docs/ops/terraform-first-deploy.md`)
+
 ## CI/CD (Low Cost)
 
 ### Continuous Integration

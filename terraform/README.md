@@ -2,128 +2,103 @@
 
 Infrastructure as Code for Scrumble using Terraform.
 
-## Structure
+## Flagship Ops Layout
 
 ```
 terraform/
-├── main.tf              # Root module
-├── variables.tf         # Input variables
-├── outputs.tf           # Output values
+├── main.tf
+├── variables.tf
+├── outputs.tf
 ├── modules/
-│   ├── dynamodb/        # DynamoDB table module
-│   ├── lambda/          # Lambda function module
-│   └── monitoring/      # CloudWatch monitoring module
-└── environments/
-    ├── dev/             # Development environment
-    └── prod/            # Production environment
+│   ├── dynamodb/
+│   ├── lambda/
+│   └── monitoring/
+├── environments/
+│   ├── dev/
+│   │   ├── terraform.tfvars
+│   │   └── backend.hcl.example
+│   └── prod/
+│       ├── terraform.tfvars
+│       └── backend.hcl.example
+└── bootstrap/
+    └── oidc/
+        ├── main.tf
+        ├── variables.tf
+        ├── outputs.tf
+        └── README.md
 ```
 
-## Prerequisites
+## Requirements
 
-- Terraform >= 1.0
+- Terraform >= 1.5
 - AWS CLI configured
-- Admin API key (stored in environment variable or passed via CLI)
+- GitHub repo secrets configured for workflow deploy path
 
-## Usage
+## Environment Separation
 
-### Initialize Terraform
+Environment-specific settings are split by tfvars:
+- `environments/dev/terraform.tfvars`
+- `environments/prod/terraform.tfvars`
 
-```bash
-cd terraform
-terraform init
-```
-
-### Plan Deployment (Production)
+Run with environment-specific vars:
 
 ```bash
-terraform plan \
-  -var-file="environments/prod/terraform.tfvars" \
-  -var="admin_key=$ADMIN_KEY"
+terraform -chdir=terraform plan -var-file="environments/dev/terraform.tfvars"
+terraform -chdir=terraform plan -var-file="environments/prod/terraform.tfvars"
 ```
 
-### Apply Deployment (Production)
+## Remote State Backend
+
+Examples for backend config are provided:
+- `environments/dev/backend.hcl.example`
+- `environments/prod/backend.hcl.example`
+
+Use `terraform init` with backend config values (or the CI workflow):
 
 ```bash
-terraform apply \
-  -var-file="environments/prod/terraform.tfvars" \
-  -var="admin_key=$ADMIN_KEY"
+terraform -chdir=terraform init \
+  -backend-config="bucket=<TF_STATE_BUCKET>" \
+  -backend-config="key=scrumble/dev/terraform.tfstate" \
+  -backend-config="region=<AWS_REGION>" \
+  -backend-config="dynamodb_table=<TF_STATE_LOCK_TABLE>" \
+  -backend-config="encrypt=true"
 ```
 
-### Development Environment
+## Least-Privilege IAM + OIDC Auth
 
-```bash
-terraform apply \
-  -var-file="environments/dev/terraform.tfvars" \
-  -var="admin_key=$ADMIN_KEY"
-```
+Bootstrap module for GitHub OIDC deploy role:
+- `bootstrap/oidc/`
 
-### Destroy Infrastructure
+It creates a role with:
+- GitHub OIDC trust policy (`token.actions.githubusercontent.com`)
+- Least-privilege policy scoped for state backend + Scrumble infra resources
 
-```bash
-terraform destroy \
-  -var-file="environments/prod/terraform.tfvars" \
-  -var="admin_key=$ADMIN_KEY"
-```
+## Monitoring + Dashboard
 
-## Modules
+Optional monitoring module (`enable_monitoring=true`) creates:
+- SNS topic/subscription for ops alerts
+- CloudWatch alarms (errors, p95 duration, throttles)
+- CloudWatch dashboard
 
-### DynamoDB Module
-Creates DynamoDB table with provisioned capacity for cost optimization.
+## CI Deploy Path
 
-### Lambda Module
-- Creates Lambda function with Function URL
-- Configures IAM role and policies
-- Sets reserved concurrent executions for cost control
-- Packages backend code automatically
+Workflow: `.github/workflows/terraform-infra.yml`
 
-### Monitoring Module (Optional)
-- CloudWatch alarms for errors, duration, throttles
-- SNS topic for alerts
-- CloudWatch dashboard for ops metrics
-- Email notifications (optional)
+Manual dispatch inputs:
+- `environment`: `dev` or `prod`
+- `action`: `plan`, `apply`, `destroy`
 
-## Outputs
+Required secrets:
+- `TERRAFORM_DEPLOY_ROLE_ARN`
+- `TF_STATE_BUCKET`
+- `TF_STATE_LOCK_TABLE`
+- `AWS_REGION`
+- `ADMIN_KEY`
 
-After deployment, Terraform outputs:
-- `function_url` - Lambda Function URL endpoint
-- `table_name` - DynamoDB table name
-- `monitoring_dashboard_url` - CloudWatch dashboard URL (if monitoring enabled)
+## Rollback
 
-## Cost Optimization
+See rollback runbook:
+- `runbooks/rollback-terraform.md`
 
-This infrastructure implements several cost optimizations:
-- **Provisioned DynamoDB capacity** (5 RCU/5 WCU) vs on-demand
-- **Reserved Lambda concurrency** (10) to prevent runaway costs
-- **ARM64 architecture** for Lambda (20% cost savings)
-- **Monitoring alarms** to catch cost spikes early
-
-## Comparison with SAM
-
-This Terraform configuration is equivalent to `template.yaml` (AWS SAM) but offers:
-- **Multi-cloud potential** (can extend to Azure/GCP)
-- **Modular design** (reusable modules)
-- **Environment management** (dev/prod configs)
-- **State management** (Terraform state tracking)
-- **Plan before apply** (preview changes)
-
-## Migration from SAM
-
-To migrate from existing SAM deployment:
-1. Import existing resources: `terraform import`
-2. Verify plan matches existing infrastructure
-3. Apply to take over management
-4. Optionally delete SAM stack
-
-## Backend Configuration
-
-For team collaboration, configure remote state:
-
-```hcl
-terraform {
-  backend "s3" {
-    bucket = "scrumble-terraform-state"
-    key    = "prod/terraform.tfstate"
-    region = "us-east-1"
-  }
-}
-```
+First deploy instructions:
+- `docs/ops/terraform-first-deploy.md`
