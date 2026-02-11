@@ -40,6 +40,7 @@
                 "lambda:GetFunction",
                 "lambda:GetFunctionConfiguration",
                 "lambda:GetFunctionConcurrency",
+                "lambda:GetFunctionUrlConfig",
                 "lambda:UpdateFunctionCode",
                 "lambda:UpdateFunctionConfiguration",
                 "lambda:PutFunctionConcurrency",
