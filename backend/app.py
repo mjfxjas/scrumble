@@ -315,7 +315,7 @@ def build_matchup_payload(matchup, entries_cache=None, votes_cache=None):
         vote_resp = table.get_item(Key={'pk': f"VOTES#{matchup['id']}", 'sk': 'TOTAL'})
         votes = vote_resp.get('Item', {'left': 0, 'right': 0})
 
-    base_boost = 150
+    base_boost = 0
 
     return {
         'matchup': {

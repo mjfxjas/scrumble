@@ -16,7 +16,10 @@ sam deploy || echo "⚠ SAM deploy skipped (no changes or error)"
 
 # Deploy frontend to scrumble.cc
 echo "→ Deploying frontend to scrumble.cc..."
-aws s3 sync app/ "s3://${SCRUMBLE_BUCKET}/" --delete --cache-control max-age=3600 --exclude ".DS_Store"
+# HTML files: short cache (1 hour)
+aws s3 sync app/ "s3://${SCRUMBLE_BUCKET}/" --delete --exclude "*" --include "*.html" --cache-control "max-age=3600" --exclude ".DS_Store"
+# JS/CSS/Images: long cache (1 year)
+aws s3 sync app/ "s3://${SCRUMBLE_BUCKET}/" --exclude "*.html" --cache-control "max-age=31536000" --exclude ".DS_Store"
 
 # Invalidate CloudFront (if distribution ID is set)
 if [[ -n "${SCRUMBLE_CF_DISTRIBUTION_ID}" ]]; then
