@@ -45,10 +45,19 @@ scrumble/
 
 ## Quick Start
 
-### Deploy Everything
+### Deploy with SAM (CloudFormation)
 ```bash
 ./autodeploy.sh
 ```
+
+### Deploy with Terraform
+```bash
+cd terraform
+terraform init
+terraform apply -var-file="environments/prod/terraform.tfvars" -var="admin_key=$ADMIN_KEY"
+```
+
+See `terraform/README.md` for detailed Terraform usage.
 
 This will:
 1. Build and deploy Lambda backend (SAM)
@@ -97,6 +106,7 @@ python3 scripts/seed.py scrumble-data
 **Backend:** Python 3.12, AWS Lambda Function URL (no API Gateway)
 **Database:** DynamoDB
 **Deployment:** AWS SAM, S3, CloudFront
+**Infrastructure as Code:** Terraform (see `terraform/` directory)
 **CDN:** CloudFront (Distribution: E2F6VQWXTCO8OB)
 
 ## API Endpoints
