@@ -65,6 +65,15 @@ jobs:
             exit 1
           fi
 
+          PARAM_OVERRIDES=(
+            "AdminKey=$ADMIN_KEY"
+            "EnableOpsMonitoring=${{ inputs.enable_ops_monitoring }}"
+          )
+
+          if [ -n "$OPS_ALARM_EMAIL" ]; then
+            PARAM_OVERRIDES+=("OpsAlarmEmail=$OPS_ALARM_EMAIL")
+          fi
+
           sam deploy \
             --stack-name "${{ inputs.stack_name }}" \
             --region "${{ inputs.aws_region }}" \
@@ -72,10 +81,7 @@ jobs:
             --capabilities CAPABILITY_IAM \
             --no-confirm-changeset \
             --no-fail-on-empty-changeset \
-            --parameter-overrides \
-              AdminKey="$ADMIN_KEY" \
-              EnableOpsMonitoring="${{ inputs.enable_ops_monitoring }}" \
-              OpsAlarmEmail="$OPS_ALARM_EMAIL"
+            --parameter-overrides "${PARAM_OVERRIDES[@]}"
 
       - name: Deploy frontend assets
         if: ${{ inputs.deploy_frontend }}
