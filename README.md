@@ -129,6 +129,56 @@ python3 scripts/seed.py scrumble-data
 - `SCRUMBLE_BUCKET` (default: `scrumble.cc`) for `./autodeploy.sh`
 - `SCRUMBLE_CF_DISTRIBUTION_ID` (default: `E2F6VQWXTCO8OB`) for `./autodeploy.sh`
 
+## CI/CD (Low Cost)
+
+### Continuous Integration
+- Workflow: `.github/workflows/ci.yml`
+- Runs on PRs and pushes to `main`
+- Performs:
+  - Python compile checks (`backend/`, `scripts/`, `list_all_data.py`)
+  - SAM template validation (`sam validate`)
+  - Deploy script executable checks
+
+### Continuous Delivery
+- Workflow: `.github/workflows/deploy.yml`
+- Trigger: manual only (`workflow_dispatch`)
+- Default: no frontend deploy and ops monitoring disabled
+- This prevents unattended deploys and surprise AWS spend.
+
+Required GitHub secrets for deploy:
+- `AWS_DEPLOY_ROLE_ARN` (OIDC role for GitHub Actions)
+- `ADMIN_KEY` (SAM parameter)
+
+Optional deploy secrets:
+- `SCRUMBLE_BUCKET` (required only when `deploy_frontend=true`)
+- `SCRUMBLE_CF_DISTRIBUTION_ID` (optional invalidation)
+- `OPS_ALARM_EMAIL` (optional SNS email subscription)
+
+## Ops Monitoring (Optional)
+
+Monitoring resources are defined in `template.yaml` and are **disabled by default** with:
+- `EnableOpsMonitoring=false`
+
+When enabled, stack creates:
+- SNS topic: `scrumble-ops-alerts`
+- CloudWatch alarms:
+  - `scrumble-lambda-errors`
+  - `scrumble-lambda-p95-duration-high`
+  - `scrumble-lambda-throttles`
+- CloudWatch dashboard: `scrumble-ops`
+
+To enable manually:
+```bash
+sam deploy --parameter-overrides AdminKey=... EnableOpsMonitoring=true OpsAlarmEmail=you@example.com
+```
+
+## Operations Artifacts
+
+- Incident response runbook: `runbooks/incident-response.md`
+- High error rate runbook: `runbooks/high-error-rate.md`
+- Sample postmortem: `docs/postmortems/2026-02-11-image-ingest-cost-spike.md`
+- Ansible config-management artifact: `ops/ansible/`
+
 ## Development Notes
 
 - Vote boosting: Base 150 + time-based variance for demo

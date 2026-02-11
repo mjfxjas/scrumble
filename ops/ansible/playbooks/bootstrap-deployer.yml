@@ -1,0 +1,64 @@
+---
+- name: Bootstrap scrumble deployment host
+  hosts: scrumble_deployers
+  become: true
+  vars:
+    deploy_user: github-actions
+
+  tasks:
+    - name: Ensure apt cache is up to date
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - unzip
+          - jq
+          - git
+          - python3
+          - python3-pip
+          - awscli
+        state: present
+
+    - name: Create deploy user
+      ansible.builtin.user:
+        name: "{{ deploy_user }}"
+        shell: /bin/bash
+        create_home: true
+
+    - name: Create .aws directory
+      ansible.builtin.file:
+        path: "/home/{{ deploy_user }}/.aws"
+        state: directory
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_user }}"
+        mode: '0700'
+
+    - name: Download SAM CLI installer
+      ansible.builtin.get_url:
+        url: https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-linux-x86_64.zip
+        dest: /tmp/aws-sam-cli.zip
+        mode: '0644'
+
+    - name: Unarchive SAM CLI installer
+      ansible.builtin.unarchive:
+        src: /tmp/aws-sam-cli.zip
+        dest: /tmp/
+        remote_src: true
+
+    - name: Install SAM CLI
+      ansible.builtin.command: /tmp/install --update
+      changed_when: true
+
+    - name: Verify SAM CLI installation
+      ansible.builtin.command: sam --version
+      register: sam_version
+      changed_when: false
+
+    - name: Print installed SAM version
+      ansible.builtin.debug:
+        var: sam_version.stdout

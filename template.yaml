@@ -7,6 +7,24 @@ Parameters:
     Type: String
     NoEcho: true
     Description: Admin API key for /admin endpoints
+  EnableOpsMonitoring:
+    Type: String
+    Default: "false"
+    AllowedValues:
+      - "true"
+      - "false"
+    Description: Create CloudWatch alarms and dashboard resources
+  OpsAlarmEmail:
+    Type: String
+    Default: ""
+    Description: Optional email endpoint for SNS alarm notifications
+
+Conditions:
+  OpsMonitoringEnabled: !Equals [!Ref EnableOpsMonitoring, "true"]
+  OpsAlarmEmailProvided: !Not [!Equals [!Ref OpsAlarmEmail, ""]]
+  OpsEmailSubscriptionEnabled: !And
+    - !Condition OpsMonitoringEnabled
+    - !Condition OpsAlarmEmailProvided
 
 Globals:
   Function:
@@ -66,6 +84,147 @@ Resources:
       FunctionUrlConfig:
         AuthType: NONE
 
+  OpsAlertsTopic:
+    Type: AWS::SNS::Topic
+    Condition: OpsMonitoringEnabled
+    Properties:
+      TopicName: scrumble-ops-alerts
+
+  OpsAlertsTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: OpsEmailSubscriptionEnabled
+    Properties:
+      TopicArn: !Ref OpsAlertsTopic
+      Protocol: email
+      Endpoint: !Ref OpsAlarmEmail
+
+  LambdaErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: OpsMonitoringEnabled
+    Properties:
+      AlarmName: scrumble-lambda-errors
+      AlarmDescription: Alarm when Lambda errors exceed threshold in 5 minutes
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ScrumbleFunction
+      AlarmActions:
+        - !Ref OpsAlertsTopic
+
+  LambdaP95DurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: OpsMonitoringEnabled
+    Properties:
+      AlarmName: scrumble-lambda-p95-duration-high
+      AlarmDescription: Alarm when Lambda p95 duration exceeds 2s in 5 minutes
+      Namespace: AWS/Lambda
+      MetricName: Duration
+      ExtendedStatistic: p95
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 2000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ScrumbleFunction
+      AlarmActions:
+        - !Ref OpsAlertsTopic
+
+  LambdaThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: OpsMonitoringEnabled
+    Properties:
+      AlarmName: scrumble-lambda-throttles
+      AlarmDescription: Alarm when Lambda throttles occur
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ScrumbleFunction
+      AlarmActions:
+        - !Ref OpsAlertsTopic
+
+  ScrumbleOpsDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Condition: OpsMonitoringEnabled
+    Properties:
+      DashboardName: scrumble-ops
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "title": "Lambda Invocations / Errors / Throttles",
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "stat": "Sum",
+                "period": 300,
+                "metrics": [
+                  [ "AWS/Lambda", "Invocations", "FunctionName", "${ScrumbleFunction}" ],
+                  [ ".", "Errors", ".", "." ],
+                  [ ".", "Throttles", ".", "." ]
+                ]
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "title": "Lambda Duration (p50/p95)",
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "period": 300,
+                "metrics": [
+                  [ "AWS/Lambda", "Duration", "FunctionName", "${ScrumbleFunction}", { "stat": "p50" } ],
+                  [ "...", { "stat": "p95" } ]
+                ]
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 6,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "title": "DynamoDB Consumed Capacity",
+                "view": "timeSeries",
+                "region": "${AWS::Region}",
+                "period": 300,
+                "stat": "Sum",
+                "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${ScrumbleTable}" ],
+                  [ ".", "ConsumedWriteCapacityUnits", ".", "." ]
+                ]
+              }
+            }
+          ]
+        }
+
 Outputs:
   FunctionUrl:
     Description: Lambda Function URL
@@ -73,3 +232,11 @@ Outputs:
   TableName:
     Description: DynamoDB Table
     Value: !Ref ScrumbleTable
+  OpsAlertsTopicArn:
+    Condition: OpsMonitoringEnabled
+    Description: SNS topic ARN used by CloudWatch alarms
+    Value: !Ref OpsAlertsTopic
+  OpsDashboardName:
+    Condition: OpsMonitoringEnabled
+    Description: CloudWatch dashboard name for Scrumble ops metrics
+    Value: !Ref ScrumbleOpsDashboard

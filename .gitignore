@@ -53,3 +53,9 @@ public/SCRUMBLE_POSTERS/
 !public/white_duck_logo.png
 !public/berk.avif
 !public/bob_corker.avif
+
+# Personal notes
+DEVOPS_GAP_ANALYSIS.md
+RESUME_UPDATES_DEVOPS.md
+scrumble_*.json
+list_all_data.py
