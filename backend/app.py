@@ -216,6 +216,11 @@ def handler(event, context):
             if not allowed:
                 return failure
             return get_visits(headers)
+        elif path == '/admin/entries' and method == 'GET':
+            allowed, failure = require_admin(event, headers)
+            if not allowed:
+                return failure
+            return get_entries(headers)
         elif path.startswith('/admin/matchup/') and method == 'PATCH':
             allowed, failure = require_admin(event, headers)
             if not allowed:
@@ -744,6 +749,31 @@ def get_visits(headers):
         'real': real_item.get('count', 0),
         'updated_at': all_item.get('updated_at', '')
     })
+
+def get_entries(headers):
+    """Get all entries grouped by category"""
+    resp = table.query(
+        KeyConditionExpression='pk = :pk',
+        ExpressionAttributeValues={':pk': 'ENTRY'}
+    )
+    
+    entries_by_category = {}
+    for item in resp.get('Items', []):
+        category = item.get('category', 'Other')
+        if category not in entries_by_category:
+            entries_by_category[category] = []
+        entries_by_category[category].append({
+            'id': item['id'],
+            'name': item['name'],
+            'neighborhood': item.get('neighborhood', ''),
+            'category': category
+        })
+    
+    # Sort entries within each category by name
+    for category in entries_by_category:
+        entries_by_category[category].sort(key=lambda x: x['name'])
+    
+    return json_response(200, headers, {'entries': entries_by_category}, cache_seconds=300)
 
 def get_submissions(headers):
     resp = table.query(

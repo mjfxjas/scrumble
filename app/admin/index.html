@@ -37,6 +37,21 @@
     .quick-schedule { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .quick-btn { padding: 6px 12px; font-size: 0.85rem; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); cursor: pointer; }
     .quick-btn:hover { border-color: var(--accent); }
+    .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--line); }
+    .tab-btn { padding: 12px 24px; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: var(--muted); font-weight: 500; }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .builder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+    .entry-column { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 20px; }
+    .entry-list { max-height: 400px; overflow-y: auto; margin-top: 12px; }
+    .entry-item { padding: 12px; margin-bottom: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); cursor: pointer; }
+    .entry-item:hover { border-color: var(--accent); }
+    .entry-item.selected { background: rgba(212, 175, 55, 0.1); border-color: var(--accent); }
+    .entry-name { font-weight: 600; }
+    .entry-meta { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+    .builder-preview { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 20px; margin-top: 24px; }
+    .vs-text { text-align: center; font-size: 1.5rem; font-weight: 700; color: var(--accent); margin: 20px 0; }
   </style>
 </head>
 <body>
@@ -73,17 +88,82 @@
       </div>
     </div>
 
-    <div class="section">
-      <h2>Active Matchups</h2>
-      <div class="matchup-list" id="active-list">
-        <div style="text-align: center; padding: 20px; color: var(--muted);">Loading...</div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('matchups')">Matchups</button>
+      <button class="tab-btn" onclick="switchTab('builder')">Create Matchup</button>
+    </div>
+
+    <div id="tab-matchups" class="tab-content active">
+      <div class="section">
+        <h2>Active Matchups</h2>
+        <div class="matchup-list" id="active-list">
+          <div style="text-align: center; padding: 20px; color: var(--muted);">Loading...</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Inactive Matchups</h2>
+        <div class="matchup-list" id="inactive-list">
+          <div style="text-align: center; padding: 20px; color: var(--muted);">Loading...</div>
+        </div>
       </div>
     </div>
 
-    <div class="section">
-      <h2>Inactive Matchups</h2>
-      <div class="matchup-list" id="inactive-list">
-        <div style="text-align: center; padding: 20px; color: var(--muted);">Loading...</div>
+    <div id="tab-builder" class="tab-content">
+      <div class="section">
+        <h2>Create New Matchup</h2>
+        
+        <div class="form-group">
+          <label>Category</label>
+          <select id="builder-category" style="width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--text); font-size: 1rem;">
+            <option value="">Select category...</option>
+          </select>
+        </div>
+
+        <div class="builder-grid">
+          <div class="entry-column">
+            <h3>Left Side</h3>
+            <div class="entry-list" id="left-entries"></div>
+          </div>
+          <div class="entry-column">
+            <h3>Right Side</h3>
+            <div class="entry-list" id="right-entries"></div>
+          </div>
+        </div>
+
+        <div class="builder-preview">
+          <h3>Selected Matchup</h3>
+          <div id="builder-selection" style="color: var(--muted); margin-top: 12px;">Select two entries to create a matchup</div>
+          
+          <div id="builder-schedule" style="display: none; margin-top: 24px;">
+            <div class="form-group">
+              <label>Schedule</label>
+              <select id="builder-schedule-type" style="width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--text); font-size: 1rem;">
+                <option value="now">Activate Now</option>
+                <option value="tomorrow">Tomorrow 9am</option>
+                <option value="custom">Custom Date/Time</option>
+              </select>
+            </div>
+            
+            <div id="builder-custom-schedule" style="display: none;">
+              <div class="form-group">
+                <label>Start Date & Time</label>
+                <input type="datetime-local" id="builder-start" style="width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--text); font-size: 1rem;" />
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Duration</label>
+              <select id="builder-duration" style="width: 100%; padding: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--text); font-size: 1rem;">
+                <option value="1">1 Day</option>
+                <option value="3">3 Days</option>
+                <option value="7">1 Week</option>
+              </select>
+            </div>
+            
+            <button class="btn vote" onclick="createMatchup()" style="width: 100%; margin-top: 16px;">Create Matchup</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -176,9 +256,17 @@
       try {
         const data = await fetchWithAuth(`${API_URL}/admin/matchups`);
         const matchups = data.matchups || [];
+        const now = new Date();
         
-        const active = matchups.filter(m => m.matchup.active);
-        const inactive = matchups.filter(m => !m.matchup.active);
+        const active = matchups.filter(m => {
+          if (!m.matchup.active) return false;
+          const startsAt = m.matchup.starts_at ? new Date(m.matchup.starts_at) : null;
+          const endsAt = m.matchup.ends_at ? new Date(m.matchup.ends_at) : null;
+          if (startsAt && now < startsAt) return false;
+          if (endsAt && now > endsAt) return false;
+          return true;
+        });
+        const inactive = matchups.filter(m => !active.includes(m));
         
         document.getElementById('stat-active').textContent = active.length;
         document.getElementById('stat-total').textContent = matchups.length;
@@ -354,6 +442,186 @@
     sessionStorage.setItem('scrumble-admin-key', adminKey);
     loadStats();
     loadMatchups();
+    loadEntries();
+
+    // Builder state
+    let allEntries = {};
+    let selectedLeft = null;
+    let selectedRight = null;
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    async function loadEntries() {
+      try {
+        const data = await fetchWithAuth(`${API_URL}/admin/entries`);
+        allEntries = data.entries || {};
+        
+        const categorySelect = document.getElementById('builder-category');
+        categorySelect.innerHTML = '<option value="">Select category...</option>';
+        Object.keys(allEntries).sort().forEach(category => {
+          const option = document.createElement('option');
+          option.value = category;
+          option.textContent = category;
+          categorySelect.appendChild(option);
+        });
+        
+        categorySelect.addEventListener('change', () => {
+          const category = categorySelect.value;
+          if (category) {
+            renderEntries(category);
+          } else {
+            document.getElementById('left-entries').innerHTML = '';
+            document.getElementById('right-entries').innerHTML = '';
+          }
+        });
+      } catch (err) {
+        console.error('Failed to load entries:', err);
+      }
+    }
+
+    function renderEntries(category) {
+      const entries = allEntries[category] || [];
+      const leftList = document.getElementById('left-entries');
+      const rightList = document.getElementById('right-entries');
+      
+      const html = entries.map(entry => `
+        <div class="entry-item" data-id="${entry.id}">
+          <div class="entry-name">${entry.name}</div>
+          ${entry.neighborhood ? `<div class="entry-meta">${entry.neighborhood}</div>` : ''}
+        </div>
+      `).join('');
+      
+      leftList.innerHTML = html;
+      rightList.innerHTML = html;
+      
+      leftList.querySelectorAll('.entry-item').forEach(item => {
+        item.addEventListener('click', () => selectEntry('left', item.dataset.id, entries));
+      });
+      
+      rightList.querySelectorAll('.entry-item').forEach(item => {
+        item.addEventListener('click', () => selectEntry('right', item.dataset.id, entries));
+      });
+      
+      selectedLeft = null;
+      selectedRight = null;
+      updateSelection();
+    }
+
+    function selectEntry(side, entryId, entries) {
+      const entry = entries.find(e => e.id === entryId);
+      if (!entry) return;
+      
+      if (side === 'left') {
+        selectedLeft = entry;
+        document.querySelectorAll('#left-entries .entry-item').forEach(item => {
+          item.classList.toggle('selected', item.dataset.id === entryId);
+        });
+      } else {
+        selectedRight = entry;
+        document.querySelectorAll('#right-entries .entry-item').forEach(item => {
+          item.classList.toggle('selected', item.dataset.id === entryId);
+        });
+      }
+      
+      updateSelection();
+    }
+
+    function updateSelection() {
+      const selectionDiv = document.getElementById('builder-selection');
+      const scheduleDiv = document.getElementById('builder-schedule');
+      
+      if (selectedLeft && selectedRight) {
+        selectionDiv.innerHTML = `
+          <div style="font-size: 1.2rem; font-weight: 600;">
+            ${selectedLeft.name}
+            <span class="vs-text" style="display: inline-block; margin: 0 16px;">VS</span>
+            ${selectedRight.name}
+          </div>
+        `;
+        scheduleDiv.style.display = 'block';
+      } else {
+        selectionDiv.innerHTML = '<span style="color: var(--muted);">Select two entries to create a matchup</span>';
+        scheduleDiv.style.display = 'none';
+      }
+    }
+
+    document.getElementById('builder-schedule-type').addEventListener('change', (e) => {
+      const customDiv = document.getElementById('builder-custom-schedule');
+      customDiv.style.display = e.target.value === 'custom' ? 'block' : 'none';
+    });
+
+    async function createMatchup() {
+      if (!selectedLeft || !selectedRight) {
+        alert('Please select both entries');
+        return;
+      }
+      
+      const category = document.getElementById('builder-category').value;
+      const scheduleType = document.getElementById('builder-schedule-type').value;
+      const duration = parseInt(document.getElementById('builder-duration').value);
+      
+      let startsAt = new Date();
+      
+      if (scheduleType === 'tomorrow') {
+        startsAt = new Date();
+        startsAt.setDate(startsAt.getDate() + 1);
+        startsAt.setHours(9, 0, 0, 0);
+      } else if (scheduleType === 'custom') {
+        const customStart = document.getElementById('builder-start').value;
+        if (!customStart) {
+          alert('Please set a start date/time');
+          return;
+        }
+        startsAt = new Date(customStart);
+      }
+      
+      const endsAt = new Date(startsAt);
+      endsAt.setDate(endsAt.getDate() + duration);
+      
+      const matchupId = `m${Date.now()}`;
+      const payload = {
+        matchup: {
+          id: matchupId,
+          title: `${selectedLeft.name} vs ${selectedRight.name}`,
+          category: category,
+          left_entry_id: selectedLeft.id,
+          right_entry_id: selectedRight.id,
+          cadence: '',
+          starts_at: scheduleType === 'now' ? '' : startsAt.toISOString(),
+          ends_at: endsAt.toISOString(),
+          active: scheduleType === 'now',
+          message: ''
+        }
+      };
+      
+      try {
+        await fetchWithAuth(`${API_URL}/admin/matchup`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        
+        alert('Matchup created successfully!');
+        switchTab('matchups');
+        await loadMatchups();
+        
+        // Reset builder
+        document.getElementById('builder-category').value = '';
+        document.getElementById('left-entries').innerHTML = '';
+        document.getElementById('right-entries').innerHTML = '';
+        selectedLeft = null;
+        selectedRight = null;
+        updateSelection();
+      } catch (err) {
+        alert('Failed to create matchup: ' + err.message);
+      }
+    }
   </script>
 </body>
 </html>

@@ -59,3 +59,10 @@ DEVOPS_GAP_ANALYSIS.md
 RESUME_UPDATES_DEVOPS.md
 scrumble_*.json
 list_all_data.py
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/bootstrap/**/.terraform/
+terraform/bootstrap/**/terraform.tfstate*
