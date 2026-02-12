@@ -87,16 +87,11 @@ jobs:
             --parameter-overrides "${PARAM_OVERRIDES[@]}"
 
       - name: Deploy frontend assets
-        if: ${{ inputs.deploy_frontend || github.event_name == 'push' }}
+        if: ${{ (inputs.deploy_frontend || github.event_name == 'push') && env.SCRUMBLE_BUCKET != '' }}
         env:
           SCRUMBLE_BUCKET: ${{ secrets.SCRUMBLE_BUCKET }}
           SCRUMBLE_CF_DISTRIBUTION_ID: ${{ secrets.SCRUMBLE_CF_DISTRIBUTION_ID }}
         run: |
-          if [ -z "$SCRUMBLE_BUCKET" ]; then
-            echo "SCRUMBLE_BUCKET secret is required when deploy_frontend=true"
-            exit 1
-          fi
-
           aws s3 sync app/ "s3://${SCRUMBLE_BUCKET}/" --delete --exclude "*" --include "*.html" --cache-control "max-age=3600" --exclude ".DS_Store"
           aws s3 sync app/ "s3://${SCRUMBLE_BUCKET}/" --exclude "*.html" --cache-control "max-age=31536000" --exclude ".DS_Store"
 
