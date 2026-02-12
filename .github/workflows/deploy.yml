@@ -29,6 +29,9 @@ on:
         required: true
         default: false
         type: boolean
+  push:
+    branches:
+      - main
 
 permissions:
   id-token: write
@@ -37,7 +40,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment || 'production' }}
 
     steps:
       - name: Checkout
@@ -67,7 +70,7 @@ jobs:
 
           PARAM_OVERRIDES=(
             "AdminKey=$ADMIN_KEY"
-            "EnableOpsMonitoring=${{ inputs.enable_ops_monitoring }}"
+            "EnableOpsMonitoring=${{ inputs.enable_ops_monitoring || 'false' }}"
           )
 
           if [ -n "$OPS_ALARM_EMAIL" ]; then
@@ -75,8 +78,8 @@ jobs:
           fi
 
           sam deploy \
-            --stack-name "${{ inputs.stack_name }}" \
-            --region "${{ inputs.aws_region }}" \
+            --stack-name "${{ inputs.stack_name || 'sam-app' }}" \
+            --region "${{ inputs.aws_region || 'us-east-1' }}" \
             --resolve-s3 \
             --capabilities CAPABILITY_IAM \
             --no-confirm-changeset \
@@ -84,7 +87,7 @@ jobs:
             --parameter-overrides "${PARAM_OVERRIDES[@]}"
 
       - name: Deploy frontend assets
-        if: ${{ inputs.deploy_frontend }}
+        if: ${{ inputs.deploy_frontend || github.event_name == 'push' }}
         env:
           SCRUMBLE_BUCKET: ${{ secrets.SCRUMBLE_BUCKET }}
           SCRUMBLE_CF_DISTRIBUTION_ID: ${{ secrets.SCRUMBLE_CF_DISTRIBUTION_ID }}
