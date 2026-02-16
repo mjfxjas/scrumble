@@ -263,7 +263,10 @@ p {
   }
   
   .navbar-menu.active {
-    max-height: 400px;
+    max-height: calc(100dvh - 60px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
   
   .navbar-menu li {
@@ -1628,6 +1631,14 @@ footer {
   .navbar {
     height: 56px;
     padding: 0 16px;
+  }
+
+  .navbar-menu {
+    top: 56px;
+  }
+
+  .navbar-menu.active {
+    max-height: calc(100dvh - 56px);
   }
 
   .page {
