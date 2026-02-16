@@ -1,0 +1,172 @@
+{
+  "generated_at": "2026-02-16 12:20:54",
+  "count": 15,
+  "prospects": [
+    {
+      "company": "Chattanooga Brewing Co",
+      "segment": "Food & Beverage",
+      "website": "https://www.chattabrew.com",
+      "decision_makers": [],
+      "emails": [
+        "info@chattabrew.com"
+      ],
+      "phones": [
+        "(423) 498-2739",
+        "423-702-9958"
+      ],
+      "source": "https://www.chattabrew.com"
+    },
+    {
+      "company": "Naked River Brewing Co",
+      "segment": "Food & Beverage",
+      "website": "https://www.nakedriverbrewing.com",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [],
+      "source": "https://www.nakedriverbrewing.com"
+    },
+    {
+      "company": "OddStory Brewing Co",
+      "segment": "Food & Beverage",
+      "website": "https://www.oddstorybrewing.co",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [
+        "423.541.8560",
+        "423.682.7690"
+      ],
+      "source": "https://www.oddstorybrewing.co"
+    },
+    {
+      "company": "Play Wash Pint",
+      "segment": "Food & Beverage",
+      "website": "https://www.playwashpint.com",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [],
+      "source": "https://www.playwashpint.com/contact"
+    },
+    {
+      "company": "White Duck Taco Shop",
+      "segment": "Food & Beverage",
+      "website": "https://www.whiteducktacoshop.com",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [],
+      "source": "https://www.whiteducktacoshop.com"
+    },
+    {
+      "company": "Frothy Monkey Chattanooga",
+      "segment": "Food & Beverage",
+      "website": "https://frothymonkey.com",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [],
+      "source": "https://frothymonkey.com"
+    },
+    {
+      "company": "Rembrandt's Coffee House",
+      "segment": "Food & Beverage",
+      "website": "https://www.rembrandtscoffeehouse.com",
+      "decision_makers": [],
+      "emails": [
+        "info@bluffview.com"
+      ],
+      "phones": [
+        "423-321-0235"
+      ],
+      "source": "https://www.rembrandtscoffeehouse.com"
+    },
+    {
+      "company": "The Edwin Hotel",
+      "segment": "Tourism & Entertainment",
+      "website": "https://www.theedwinhotel.com",
+      "decision_makers": [],
+      "emails": [
+        "edwin@phase3mc.com"
+      ],
+      "phones": [
+        "(423) 713-5900"
+      ],
+      "source": "https://www.theedwinhotel.com"
+    },
+    {
+      "company": "The Read House",
+      "segment": "Tourism & Entertainment",
+      "website": "https://www.thereadhousehotel.com",
+      "decision_makers": [],
+      "emails": [
+        "res@thereadhousehotel.com"
+      ],
+      "phones": [
+        "(423) 266-4121",
+        "423-266-4121"
+      ],
+      "source": "https://www.thereadhousehotel.com"
+    },
+    {
+      "company": "Chattanooga FC",
+      "segment": "Tourism & Entertainment",
+      "website": "https://www.chattanoogafc.com",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [],
+      "source": "https://www.chattanoogafc.com"
+    },
+    {
+      "company": "Chattanooga Lookouts",
+      "segment": "Tourism & Entertainment",
+      "website": "https://www.milb.com/chattanooga",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [
+        "(423) 267-2208"
+      ],
+      "source": "https://www.milb.com/chattanooga"
+    },
+    {
+      "company": "Tennessee Aquarium",
+      "segment": "Tourism & Entertainment",
+      "website": "https://tnaqua.org",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [
+        "800-262-0695"
+      ],
+      "source": "https://tnaqua.org"
+    },
+    {
+      "company": "Ruby Falls",
+      "segment": "Tourism & Entertainment",
+      "website": "https://www.rubyfalls.com",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [
+        "(423) 821-2544"
+      ],
+      "source": "https://www.rubyfalls.com"
+    },
+    {
+      "company": "CHI Memorial",
+      "segment": "Healthcare",
+      "website": "https://www.chimemorial.org",
+      "decision_makers": [
+        "President: Meet Matt Janelle"
+      ],
+      "emails": [],
+      "phones": [],
+      "source": "https://www.chimemorial.org"
+    },
+    {
+      "company": "Erlanger",
+      "segment": "Healthcare",
+      "website": "https://www.erlanger.org",
+      "decision_makers": [],
+      "emails": [],
+      "phones": [
+        "423-778-7000"
+      ],
+      "source": "https://www.erlanger.org"
+    }
+  ]
+}
