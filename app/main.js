@@ -21,6 +21,98 @@ function hasApi() {
   return API_URL.length > 0;
 }
 
+function trackEvent(name, params = {}) {
+  try {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', name, params);
+    }
+    if (typeof window.plausible === 'function') {
+      window.plausible(name, { props: params });
+    }
+  } catch (err) {
+    console.debug('trackEvent failed', name, err);
+  }
+}
+
+function winnerSummary(matchupData) {
+  const leftVotes = Number(matchupData?.votes?.left || 0);
+  const rightVotes = Number(matchupData?.votes?.right || 0);
+  const leftName = matchupData?.left?.name || 'Left';
+  const rightName = matchupData?.right?.name || 'Right';
+  if (leftVotes >= rightVotes) {
+    return { winner: leftName, loser: rightName, winnerVotes: leftVotes, loserVotes: rightVotes };
+  }
+  return { winner: rightName, loser: leftName, winnerVotes: rightVotes, loserVotes: leftVotes };
+}
+
+function makeShareCardDataUrl(matchupData) {
+  const matchup = matchupData?.matchup || {};
+  const summary = winnerSummary(matchupData);
+  const width = 1200;
+  const height = 630;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, '#0f1115');
+  gradient.addColorStop(1, '#1f2533');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = '#f7b24d';
+  ctx.font = '700 52px "Space Grotesk", sans-serif';
+  ctx.fillText('SCRUMBLE', 60, 95);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 42px "Space Grotesk", sans-serif';
+  ctx.fillText((matchup.title || matchup.message || 'Chattanooga Matchup').slice(0, 46), 60, 185);
+
+  ctx.font = '600 34px "Space Grotesk", sans-serif';
+  ctx.fillText(`${summary.winner} wins`, 60, 280);
+
+  ctx.font = '500 28px "Space Grotesk", sans-serif';
+  ctx.fillStyle = '#d6d8de';
+  ctx.fillText(`${summary.winnerVotes} - ${summary.loserVotes} vs ${summary.loser}`, 60, 330);
+
+  ctx.fillStyle = '#f7b24d';
+  ctx.font = '500 24px "Space Grotesk", sans-serif';
+  ctx.fillText('Vote local at scrumble.cc', 60, 560);
+
+  return canvas.toDataURL('image/png');
+}
+
+async function shareMatchupCard(url, matchupData) {
+  const dataUrl = makeShareCardDataUrl(matchupData);
+  const filename = `scrumble-${matchupData?.matchup?.id || 'matchup'}.png`;
+
+  try {
+    const resp = await fetch(dataUrl);
+    const blob = await resp.blob();
+    const file = new File([blob], filename, { type: 'image/png' });
+
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: 'Scrumble',
+        text: 'Chattanooga voted. See this matchup.',
+        url,
+        files: [file]
+      });
+      return 'shared';
+    }
+
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    a.click();
+    return 'downloaded';
+  } catch (err) {
+    console.debug('share card fallback', err);
+    return 'failed';
+  }
+}
+
 async function fetchWithRetry(url, options = {}, maxRetries = 3) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -725,6 +817,7 @@ function render() {
 
   state.matchups.forEach((matchupData, idx) => {
     const matchupId = matchupData.matchup?.id || `matchup-${idx + 1}`;
+    trackEvent('matchup_impression', { matchup_id: matchupId, index: idx });
     const baseAnchor = getMatchupAnchor(matchupData, idx);
     let anchor = baseAnchor;
     let suffix = 2;
@@ -858,6 +951,7 @@ async function vote(side, btn) {
   const matchup = state.matchups.find((m) => m.matchup?.id === matchupId);
 
   console.log('Vote attempt:', side, 'matchupId:', matchupId, 'matchup:', matchup);
+  trackEvent('vote_click', { matchup_id: matchupId, side });
 
   if (!matchup || !matchup.matchup) {
     console.error('Matchup not found for id', matchupId);
@@ -905,7 +999,9 @@ async function vote(side, btn) {
     saveVotedState(matchupId, actualSide);
     
     matchup.votes[actualSide] += 1;
-    
+
+    trackEvent('vote_success', { matchup_id: matchupId, side: actualSide });
+
     const total = matchup.votes.left + matchup.votes.right;
     const votedCount = matchup.votes[actualSide];
     const isMajority = votedCount > (total / 2);
@@ -954,35 +1050,37 @@ function init() {
   loadMatchup();
   updateStickyVote();
 
-  document.body.addEventListener("click", (e) => {
+  document.body.addEventListener("click", async (e) => {
     if (e.target.classList.contains("vote") && e.target.dataset.side) {
       vote(e.target.dataset.side, e.target);
     }
 
     const shareLink = e.target.closest(".share-link");
     if (shareLink) {
+      e.preventDefault();
       const hash = shareLink.getAttribute("href") || "";
       const base = window.location.href.split("#")[0];
       const url = `${base}${hash}`;
-      if (navigator.share) {
-        e.preventDefault();
-        navigator.share({
-          title: "Scrumble",
-          text: "Vote on this matchup.",
-          url
-        }).then(() => {
-          showToast("Share link ready.");
-        }).catch(() => {});
-        window.location.hash = hash;
-        return;
+      const matchupId = shareLink.closest('.matchup-card')?.dataset?.matchupId;
+      const matchupData = (state.matchups || []).find(m => m.matchup?.id === matchupId);
+
+      trackEvent('share_click', { matchup_id: matchupId || 'unknown' });
+
+      if (matchupData) {
+        const shareResult = await shareMatchupCard(url, matchupData);
+        if (shareResult === 'shared') {
+          showToast('Shared card.');
+        } else if (shareResult === 'downloaded') {
+          showToast('Card downloaded. Share it anywhere.');
+        }
       }
+
       if (navigator.clipboard) {
-        e.preventDefault();
         navigator.clipboard.writeText(url).then(() => {
-          showToast("Link copied.");
+          showToast('Link copied.');
         }).catch(() => {});
-        window.location.hash = hash;
       }
+      window.location.hash = hash;
     }
   });
 
@@ -1261,6 +1359,7 @@ document.body.addEventListener('click', async (e) => {
     }
     
     section.classList.add('expanded');
+    trackEvent('comment_open', { matchup_id: matchupId });
     await loadComments(matchupId);
   }
   

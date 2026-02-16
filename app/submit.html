@@ -24,6 +24,7 @@
         <li><a href="index.html#arena">Vote</a></li>
         <li><a href="submit.html">Submit</a></li>
         <li><a href="history.html">History</a></li>
+        <li><a href="partner.html">Partner</a></li>
         <li><a href="about.html">About</a></li>
         <li><a href="jobs.html">Jobs</a></li>
         <li><button class="theme-toggle" type="button" aria-label="Cycle theme">Theme</button></li>
@@ -35,7 +36,7 @@
           <span>SUBMIT A MATCHUP</span>
         </h1>
         <p style="max-width: 600px; margin: 0 auto 40px; color: var(--muted);">
-          Suggest two local spots that should go head-to-head. We'll review and add the best ones.
+          Suggest two local spots that should go head-to-head. We review submissions quickly (target: within 72 hours) and publish the strongest matchups.
         </p>
       </header>
 
@@ -118,6 +119,15 @@
 
       const form = document.getElementById('submit-form');
       const status = document.getElementById('status');
+
+      function trackEvent(name, params = {}) {
+        try {
+          if (typeof window.gtag === 'function') window.gtag('event', name, params);
+          if (typeof window.plausible === 'function') window.plausible(name, { props: params });
+        } catch (err) {
+          console.debug('trackEvent failed', name, err);
+        }
+      }
       const confirmation = document.getElementById('submit-confirmation');
       const confirmLeft = document.getElementById('confirm-left');
       const confirmRight = document.getElementById('confirm-right');
@@ -181,6 +191,7 @@
 
           status.style.color = 'var(--accent)';
           status.textContent = '✓ Submitted! We\'ll review it soon.';
+          trackEvent('submit_success', { category: payload.category || 'unknown' });
           e.target.reset();
           showConfirmation(payload);
         } catch (err) {

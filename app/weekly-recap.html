@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weekly Recap - Scrumble</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="/" class="navbar-brand" style="text-decoration: none; color: inherit;">SCRUMBLE</a>
+      <button class="navbar-toggle" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+      <ul class="navbar-menu">
+        <li><a href="index.html#arena">Vote</a></li>
+        <li><a href="submit.html">Submit</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="partner.html">Partner</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="jobs.html">Jobs</a></li>
+      </ul>
+    </nav>
+
+    <div class="page">
+      <header class="hero">
+        <h1 class="hero-title" style="font-size: 3rem;"><span>WEEKLY RECAP</span></h1>
+        <p style="max-width:700px; margin:0 auto 20px; color:var(--muted);">Top winners, close calls, and local bragging rights from this week.</p>
+      </header>
+
+      <main>
+        <section class="arena" style="max-width: 900px; margin: 0 auto;">
+          <div id="recap-content" class="history-list">
+            <div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Loading weekly recap...</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+      const API_BASE = (window.SCRUMBLE_API_BASE || '').trim();
+      const API_URL = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+
+      function winner(item) {
+        const leftVotes = Number(item?.votes?.left || 0);
+        const rightVotes = Number(item?.votes?.right || 0);
+        return leftVotes >= rightVotes
+          ? { name: item.left?.name || 'Left', votes: leftVotes, margin: leftVotes - rightVotes }
+          : { name: item.right?.name || 'Right', votes: rightVotes, margin: rightVotes - leftVotes };
+      }
+
+      async function loadRecap() {
+        const container = document.getElementById('recap-content');
+        if (!API_URL) {
+          container.innerHTML = '<div class="tiny" style="text-align:center; padding:20px; color:var(--muted);">Missing API configuration.</div>';
+          return;
+        }
+
+        try {
+          const resp = await fetch(`${API_URL}/history`);
+          const data = await resp.json();
+          const items = (data.history || []).filter(i => !i.active).slice(0, 12);
+
+          if (!items.length) {
+            container.innerHTML = '<div class="tiny" style="text-align:center; padding:20px; color:var(--muted);">No finished matchups yet.</div>';
+            return;
+          }
+
+          const ranked = items
+            .map(i => ({ i, w: winner(i), total: Number(i?.votes?.left || 0) + Number(i?.votes?.right || 0) }))
+            .sort((a,b) => b.total - a.total);
+
+          const top = ranked.slice(0,5);
+          const closest = [...ranked].sort((a,b) => a.w.margin - b.w.margin)[0];
+
+          container.innerHTML = `
+            <article class="panel" style="margin-bottom:14px;">
+              <h4>Top 5 by Vote Volume</h4>
+              <ol style="margin-top:10px; line-height:1.8;">
+                ${top.map(t => `<li><strong>${t.i.title || t.i.category || 'Matchup'}</strong> — ${t.total} votes (winner: ${t.w.name})</li>`).join('')}
+              </ol>
+            </article>
+            <article class="panel" style="margin-bottom:14px;">
+              <h4>Closest Battle</h4>
+              <p style="margin-top:10px;">${closest.i.title || 'Matchup'} — ${closest.w.name} won by ${closest.w.margin} vote${closest.w.margin === 1 ? '' : 's'}.</p>
+            </article>
+            <article class="panel">
+              <h4>Want your matchup featured?</h4>
+              <p style="margin-top:10px;"><a href="submit.html" style="color: var(--accent); text-decoration:none;">Submit it here</a>.</p>
+            </article>
+          `;
+        } catch (err) {
+          console.error(err);
+          container.innerHTML = '<div class="tiny" style="text-align:center; padding:20px; color:var(--muted);">Failed to load recap.</div>';
+        }
+      }
+
+      loadRecap();
+    </script>
+  </body>
+</html>

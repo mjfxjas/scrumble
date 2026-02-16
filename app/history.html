@@ -24,6 +24,7 @@
         <li><a href="index.html#arena">Vote</a></li>
         <li><a href="submit.html">Submit</a></li>
         <li><a href="history.html">History</a></li>
+        <li><a href="partner.html">Partner</a></li>
         <li><a href="about.html">About</a></li>
         <li><a href="jobs.html">Jobs</a></li>
         <li><button class="theme-toggle" type="button" aria-label="Cycle theme">Theme</button></li>
@@ -38,6 +39,17 @@
 
       <main>
         <section class="history-section">
+          <div class="panel" style="margin-bottom: 16px; display: grid; gap: 10px;">
+            <div style="display: grid; gap: 10px; grid-template-columns: 1fr 1fr auto;">
+              <input id="history-search" type="text" placeholder="Search matchup, winner, or category" style="padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink);" />
+              <select id="history-category" style="padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink);">
+                <option value="all">All categories</option>
+              </select>
+              <button id="history-clear" class="btn ghost" type="button">Clear</button>
+            </div>
+            <div class="tiny" id="history-count" style="color: var(--muted);"></div>
+          </div>
+
           <div class="history-list" id="history-list">
             <div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Loading history...</div>
           </div>
@@ -51,37 +63,119 @@
       const API_BASE = (window.SCRUMBLE_API_BASE || "").trim();
       const API_URL = API_BASE.endsWith("/") ? API_BASE.slice(0, -1) : API_BASE;
 
+      const historyState = { all: [], filtered: [] };
+
+      function updateUrlParams(category, search) {
+        const url = new URL(window.location.href);
+        if (category && category !== 'all') url.searchParams.set('category', category);
+        else url.searchParams.delete('category');
+
+        if (search && search.trim()) url.searchParams.set('q', search.trim());
+        else url.searchParams.delete('q');
+
+        window.history.replaceState({}, '', `${url.pathname}?${url.searchParams.toString()}`.replace(/\?$/, ''));
+      }
+
+      function readInitialFilters() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          category: params.get('category') || 'all',
+          q: params.get('q') || ''
+        };
+      }
+
+      function renderHistoryList(items) {
+        const list = document.getElementById('history-list');
+        const count = document.getElementById('history-count');
+
+        count.textContent = `${items.length} archived matchup${items.length === 1 ? '' : 's'}`;
+
+        if (!items.length) {
+          list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">No matchups match your filters.</div>';
+          return;
+        }
+
+        list.innerHTML = items.map(h => {
+          const leftVotes = Number(h.votes?.left || 0);
+          const rightVotes = Number(h.votes?.right || 0);
+          const leftWon = leftVotes >= rightVotes;
+          const total = leftVotes + rightVotes;
+          const winner = leftWon ? h.left?.name : h.right?.name;
+          const loser = leftWon ? h.right?.name : h.left?.name;
+          const winnerVotes = leftWon ? leftVotes : rightVotes;
+          const loserVotes = leftWon ? rightVotes : leftVotes;
+
+          return `
+            <div class="history-item">
+              <div class="history-matchup">
+                <div class="history-title">${h.title || 'Untitled matchup'}</div>
+                <div class="history-meta">${h.category || 'general'} • ${total} votes</div>
+              </div>
+              <div class="history-result">
+                <div class="history-winner">${winner || 'N/A'} ${winnerVotes}</div>
+                <div class="history-loser">${loser || 'N/A'} ${loserVotes}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function applyFilters() {
+        const search = document.getElementById('history-search').value.trim().toLowerCase();
+        const category = document.getElementById('history-category').value;
+
+        historyState.filtered = historyState.all.filter(h => {
+          const categoryMatch = category === 'all' || (h.category || '').toLowerCase() === category.toLowerCase();
+          if (!categoryMatch) return false;
+
+          if (!search) return true;
+          const hay = [h.title, h.category, h.left?.name, h.right?.name].join(' ').toLowerCase();
+          return hay.includes(search);
+        });
+
+        updateUrlParams(category, search);
+        renderHistoryList(historyState.filtered);
+      }
+
+      function populateCategories(items, initialCategory) {
+        const select = document.getElementById('history-category');
+        const categories = [...new Set(items.map(i => (i.category || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+        categories.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          select.appendChild(opt);
+        });
+        if (initialCategory && [...select.options].some(o => o.value === initialCategory)) {
+          select.value = initialCategory;
+        }
+      }
+
       async function loadHistory() {
-        if (!API_URL) return;
-        
+        const list = document.getElementById('history-list');
+        if (!API_URL) {
+          list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Missing API configuration.</div>';
+          return;
+        }
+
         try {
           const resp = await fetch(`${API_URL}/history`);
           const data = await resp.json();
-          
-          const list = document.getElementById('history-list');
-          if (!data.history || data.history.length === 0) {
-            list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">No past brawls yet</div>';
+          const all = (data.history || []).filter(h => !h.active);
+
+          if (!all.length) {
+            list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">No past brawls yet.</div>';
             return;
           }
-          
-          list.innerHTML = data.history.filter(h => !h.active).map(h => {
-            const leftWon = h.votes.left > h.votes.right;
-            const total = h.votes.left + h.votes.right;
-            return `
-              <div class="history-item">
-                <div class="history-matchup">
-                  <div class="history-title">${h.title}</div>
-                  <div class="history-meta">${h.category} • ${total} votes</div>
-                </div>
-                <div class="history-result">
-                  <div class="history-winner">${leftWon ? h.left.name : h.right.name} ${leftWon ? h.votes.left : h.votes.right}</div>
-                  <div class="history-loser">${leftWon ? h.right.name : h.left.name} ${leftWon ? h.votes.right : h.votes.left}</div>
-                </div>
-              </div>
-            `;
-          }).join('');
+
+          historyState.all = all;
+          const initial = readInitialFilters();
+          document.getElementById('history-search').value = initial.q;
+          populateCategories(all, initial.category);
+          applyFilters();
         } catch (err) {
           console.error('Failed to load history:', err);
+          list.innerHTML = '<div class="tiny" style="text-align: center; padding: 20px; color: var(--muted);">Failed to load history.</div>';
         }
       }
 
@@ -101,6 +195,14 @@
           });
         });
       }
+
+      document.getElementById('history-search').addEventListener('input', applyFilters);
+      document.getElementById('history-category').addEventListener('change', applyFilters);
+      document.getElementById('history-clear').addEventListener('click', () => {
+        document.getElementById('history-search').value = '';
+        document.getElementById('history-category').value = 'all';
+        applyFilters();
+      });
 
       loadHistory();
     </script>
