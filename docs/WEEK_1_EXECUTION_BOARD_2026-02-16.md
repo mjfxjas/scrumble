@@ -152,12 +152,12 @@ If solo: you are Owner A + B and run in sequence.
 
 ## Exact Deliverables Checklist
 
-- [ ] `share` flow with winner card
-- [ ] history/category archive upgrade
-- [ ] first weekly recap page published
-- [ ] event analytics in place
-- [ ] partner page published
-- [ ] sponsor rate card finalized
+- [x] `share` flow with winner card (client-side generated card + share/download)
+- [x] history/category archive upgrade (search + category filter + URL params)
+- [x] first weekly recap page published (`app/weekly-recap.html`)
+- [x] event analytics in place (`matchup_impression`, `vote_click`, `vote_success`, `comment_open`, `share_click`, `submit_success`)
+- [x] partner page published (`app/partner.html`)
+- [x] sponsor rate card finalized (`docs/SPONSOR_RATE_CARD_2026-02-16.md`)
 - [ ] 3 outreach messages sent
 
 ---
@@ -207,3 +207,19 @@ Total: 3.5 hours/day minimum focused execution
 - first sponsor pilot campaign
 - leaderboard/index pages for SEO capture
 - repeatable weekly recap automation
+
+---
+
+## Status Update (2026-02-16)
+
+Completed this session:
+- Partner page shipped and linked in nav + homepage CTA
+- Sponsor rate card drafted and committed
+- Weekly recap page template shipped
+- History page upgraded with category/search filters
+- Winner-card sharing flow implemented (download/share fallback)
+- Analytics events added for key funnel points
+- Submit page SLA copy updated; About page trust copy improved
+
+Open item from Week 1:
+- Send 3 outbound partnership messages and log responses

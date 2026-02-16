@@ -218,3 +218,11 @@
 11. Contact 3 local news outlets (1 hr)
 12. Run first Facebook ad (1 hr)
 13. Create email capture form (30 min)
+
+### Progress update (2026-02-16)
+- ✅ Partner landing page shipped (`app/partner.html`)
+- ✅ Weekly recap page shipped (`app/weekly-recap.html`)
+- ✅ Sponsor rate card shipped (`docs/SPONSOR_RATE_CARD_2026-02-16.md`)
+- ✅ History filters/search shipped
+- ✅ Share card generation + share/download fallback shipped
+- ✅ Funnel analytics event hooks added
