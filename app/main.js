@@ -21,8 +21,13 @@ function hasApi() {
   return API_URL.length > 0;
 }
 
+const ANALYTICS_DEBUG = window.SCRUMBLE_ANALYTICS_DEBUG === true;
+
 function trackEvent(name, params = {}) {
   try {
+    if (ANALYTICS_DEBUG) {
+      console.info('[analytics]', name, params);
+    }
     if (typeof window.gtag === 'function') {
       window.gtag('event', name, params);
     }
@@ -774,6 +779,14 @@ function buildMatchupCard(matchupData, index, anchor) {
   share.textContent = "Share";
   if (hasVoted) share.classList.add("is-visible");
   actions.appendChild(share);
+
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "share-copy-btn";
+  copyBtn.type = "button";
+  copyBtn.textContent = "Copy link";
+  copyBtn.dataset.matchupId = matchupId;
+  if (hasVoted) copyBtn.classList.add("is-visible");
+  actions.appendChild(copyBtn);
   
   const commentsSection = document.createElement("div");
   commentsSection.className = "comments-section";
@@ -1055,12 +1068,36 @@ function init() {
       vote(e.target.dataset.side, e.target);
     }
 
+    const copyBtn = e.target.closest('.share-copy-btn');
+    if (copyBtn) {
+      e.preventDefault();
+      const matchupId = copyBtn.dataset.matchupId;
+      const anchor = state.anchorById?.[matchupId] || matchupId;
+      const base = window.location.href.split('#')[0];
+      const shareUrl = new URL(base);
+      shareUrl.searchParams.set('utm_source', 'scrumble_share');
+      shareUrl.searchParams.set('utm_medium', 'copy');
+      shareUrl.searchParams.set('utm_campaign', 'matchup_share');
+      const url = `${shareUrl.toString()}#${anchor}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          trackEvent('share_click', { matchup_id: matchupId || 'unknown', mode: 'copy_button' });
+          showToast('Link copied.');
+        }).catch(() => {});
+      }
+      return;
+    }
+
     const shareLink = e.target.closest(".share-link");
     if (shareLink) {
       e.preventDefault();
       const hash = shareLink.getAttribute("href") || "";
       const base = window.location.href.split("#")[0];
-      const url = `${base}${hash}`;
+      const shareUrl = new URL(base);
+      shareUrl.searchParams.set('utm_source', 'scrumble_share');
+      shareUrl.searchParams.set('utm_medium', 'social');
+      shareUrl.searchParams.set('utm_campaign', 'matchup_share');
+      const url = `${shareUrl.toString()}${hash}`;
       const matchupId = shareLink.closest('.matchup-card')?.dataset?.matchupId;
       const matchupData = (state.matchups || []).find(m => m.matchup?.id === matchupId);
 

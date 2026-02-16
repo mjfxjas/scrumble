@@ -125,11 +125,21 @@
           <article class="panel">
             <h4>What we cover</h4>
             <p>Chattanooga, Dynamo of Dixie, the Scenic City, Gig City, River City—all the best of our town.</p>
+            <p style="margin-top:8px;">Jump by category: <a href="history.html?category=food" style="color: var(--accent); text-decoration: none;">Food</a> · <a href="history.html?category=coffee" style="color: var(--accent); text-decoration: none;">Coffee</a> · <a href="history.html?category=drinks" style="color: var(--accent); text-decoration: none;">Drinks</a></p>
           </article>
           <article class="panel">
             <h4>Bring the heat</h4>
             <p><a href="submit.html" style="color: var(--accent); text-decoration: none;">Submit a matchup</a> and we'll get it in the ring.</p>
             <p style="margin-top:8px;"><a href="partner.html" style="color: var(--accent); text-decoration: none;">Partner with Scrumble</a> for sponsored matchups.</p>
+          </article>
+          <article class="panel">
+            <h4>Weekly local roundup</h4>
+            <p>Get top winners and close battles in one short email.</p>
+            <form id="newsletter-form" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+              <input id="newsletter-email" type="email" required placeholder="you@email.com" style="flex:1; min-width:220px; padding:10px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink);" />
+              <button class="btn ghost" type="submit">Subscribe</button>
+            </form>
+            <div id="newsletter-status" class="tiny" style="margin-top:8px; color:var(--muted);"></div>
           </article>
         </section>
       </main>
@@ -163,5 +173,38 @@
     <script src="config.js"></script>
     <script src="theme.js"></script>
     <script src="main.js"></script>
+    <script>
+      (function () {
+        const form = document.getElementById('newsletter-form');
+        const email = document.getElementById('newsletter-email');
+        const status = document.getElementById('newsletter-status');
+        const API_BASE = (window.SCRUMBLE_API_BASE || '').trim();
+        const API_URL = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          status.textContent = '';
+          if (!API_URL) {
+            status.textContent = 'Newsletter unavailable right now.';
+            return;
+          }
+
+          try {
+            const resp = await fetch(`${API_URL}/newsletter`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email.value.trim(), source: 'homepage_panel' })
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.success === false) throw new Error(data.error || 'Subscribe failed');
+            status.textContent = 'Subscribed. Check your inbox soon.';
+            email.value = '';
+          } catch (err) {
+            status.textContent = `Could not subscribe: ${err.message}`;
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

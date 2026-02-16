@@ -120,8 +120,11 @@
       const form = document.getElementById('submit-form');
       const status = document.getElementById('status');
 
+      const ANALYTICS_DEBUG = window.SCRUMBLE_ANALYTICS_DEBUG === true;
+
       function trackEvent(name, params = {}) {
         try {
+          if (ANALYTICS_DEBUG) console.info('[analytics]', name, params);
           if (typeof window.gtag === 'function') window.gtag('event', name, params);
           if (typeof window.plausible === 'function') window.plausible(name, { props: params });
         } catch (err) {

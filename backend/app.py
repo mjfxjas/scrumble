@@ -203,6 +203,12 @@ def handler(event, context):
             if not valid:
                 return json_response(400, headers, {'error': error})
             return submit_matchup(body, headers)
+        elif path == '/newsletter' and method == 'POST':
+            body = parse_body(event)
+            valid, error = validate_request(method, body, ['email'])
+            if not valid:
+                return json_response(400, headers, {'error': error})
+            return subscribe_newsletter(body, headers)
         elif path == '/visit' and method == 'POST':
             body = parse_body(event)
             return record_visit(body, headers, is_synthetic(event))
@@ -422,6 +428,31 @@ def get_active_matchup(headers):
 def get_admin_matchups(headers):
     return get_matchups(headers, apply_time_window=False)
 
+def has_recent_vote(matchup_id, fingerprint, within_seconds=86400):
+    vote_prefix = f"V#{fingerprint}#"
+    resp = table.query(
+        KeyConditionExpression='pk = :pk AND begins_with(sk, :prefix)',
+        ExpressionAttributeValues={
+            ':pk': f"VOTES#{matchup_id}",
+            ':prefix': vote_prefix
+        },
+        ScanIndexForward=False,
+        Limit=1
+    )
+    items = resp.get('Items', [])
+    if not items:
+        return False
+
+    latest = items[0]
+    ts_text = latest.get('ts') or latest.get('sk', '').replace(vote_prefix, '')
+    vote_dt = parse_iso8601(ts_text)
+    if not vote_dt:
+        return True
+
+    now = datetime.now(timezone.utc)
+    return (now - vote_dt).total_seconds() < within_seconds
+
+
 def cast_vote(body, headers, synthetic=False):
     matchup_id = body.get('matchup_id')
     side = body.get('side')
@@ -446,7 +477,10 @@ def cast_vote(body, headers, synthetic=False):
     
     vote_prefix = "VOTES_SYNTH" if synthetic else "VOTES"
     vote_key = {'pk': f"{vote_prefix}#{matchup_id}", 'sk': 'TOTAL'}
-    
+
+    if not synthetic and has_recent_vote(matchup_id, fingerprint):
+        return json_response(409, headers, {'error': 'Vote already cast for this matchup in the last 24 hours'}, error_code='VOTE_ALREADY_CAST')
+
     try:
         table.update_item(
             Key=vote_key,
@@ -708,6 +742,28 @@ def submit_matchup(body, headers):
         'rejection_reason': ''
     })
     
+    return json_response(200, headers, {'ok': True})
+
+
+def subscribe_newsletter(body, headers):
+    email = body.get('email', '').strip().lower()
+    source = body.get('source', 'site').strip()
+
+    if not email or '@' not in email:
+        return json_response(400, headers, {'error': 'Valid email required'})
+
+    now = datetime.utcnow().isoformat()
+    table.put_item(Item={
+        'pk': 'NEWSLETTER',
+        'sk': email,
+        'email': email,
+        'source': source,
+        'created_at': now,
+        'updated_at': now,
+        'status': 'subscribed'
+    })
+
+    log('INFO', 'Newsletter subscription', email=email, source=source)
     return json_response(200, headers, {'ok': True})
 
 def update_visit_count(sk, now):
