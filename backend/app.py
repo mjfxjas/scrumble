@@ -602,6 +602,12 @@ def upsert_entry(entry, category):
     return True, None
 
 def activate_matchup(body, headers):
+    """Admin helper: mark a matchup as active (enabled).
+
+    Important: Scrumble supports *multiple* active matchups at once.
+    This endpoint MUST NOT deactivate other matchups or maintain a global
+    `sk = ACTIVE` pointer.
+    """
     matchup_id = body.get('matchup_id')
     if not matchup_id:
         return json_response(400, headers, {'error': 'matchup_id is required'})
@@ -616,28 +622,13 @@ def activate_matchup(body, headers):
         FilterExpression='active = :active',
         ExpressionAttributeValues={':pk': 'MATCHUP', ':active': True}
     )
-    
+
     for item in resp.get('Items', []):
         if item['sk'] == 'ACTIVE' or item['id'] == matchup_id:
             continue
-        # Check if same entries (in either order)
         if ((item['left_entry_id'] == target['left_entry_id'] and item['right_entry_id'] == target['right_entry_id']) or
             (item['left_entry_id'] == target['right_entry_id'] and item['right_entry_id'] == target['left_entry_id'])):
             return json_response(400, headers, {'error': f"Duplicate matchup already active: {item['id']}"})
-
-    current = table.get_item(Key={'pk': 'MATCHUP', 'sk': 'ACTIVE'}).get('Item')
-    if current and current.get('id') and current.get('id') != matchup_id:
-        table.update_item(
-            Key={'pk': 'MATCHUP', 'sk': current['id']},
-            UpdateExpression='SET active = :inactive',
-            ExpressionAttributeValues={':inactive': False}
-        )
-
-    target_active = dict(target)
-    target_active['active'] = True
-    target_active['pk'] = 'MATCHUP'
-    target_active['sk'] = 'ACTIVE'
-    table.put_item(Item=target_active)
 
     table.update_item(
         Key={'pk': 'MATCHUP', 'sk': matchup_id},
@@ -710,9 +701,8 @@ def create_matchup(body, headers):
             'right': 0
         })
 
-    if is_active:
-        return activate_matchup({'matchup_id': matchup_id}, headers)
-
+    # NOTE: `active` means "enabled/eligible for display".
+    # Do NOT auto-switch a global "ACTIVE" pointer here; the site can have multiple active matchups.
     return json_response(200, headers, {'ok': True, 'matchup_id': matchup_id})
 
 def submit_matchup(body, headers):
