@@ -66,3 +66,5 @@ terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/bootstrap/**/.terraform/
 terraform/bootstrap/**/terraform.tfstate*
+.envrc
+.direnv/
