@@ -28,3 +28,12 @@
 2. Add direct challenge invites with deep links to specific matchup IDs.
 3. Add instrumentation for invite funnel (`invite_sent`, `invite_accept`, `streak_continue`) and dashboard views for D1/D7 + share/invite conversion.
 4. Define weekly live-ops calendar + quality rubric for matchup publishing.
+
+## 2026-02-19 daily sweep
+- Maintainer follow-up comments posted on OSS blockers:
+  - `kubernetes-sigs/external-dns#6201`
+  - `gruntwork-io/terragrunt#5555`
+- Scrumble production status:
+  - `/future` count = 4 (healthy)
+  - `/matchup` in-window count = 3
+  - `/admin/visits` = all 20 / real 9
