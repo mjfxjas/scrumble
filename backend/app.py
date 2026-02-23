@@ -151,7 +151,7 @@ def handler(event, context):
     headers = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
+        'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
         'Access-Control-Allow-Headers': '*',
         'X-Correlation-ID': correlation_id
     }
@@ -234,6 +234,12 @@ def handler(event, context):
             matchup_id = path.split('/')[-1]
             body = parse_body(event)
             return update_matchup(matchup_id, body, headers)
+        elif path.startswith('/admin/matchup/') and method == 'DELETE':
+            allowed, failure = require_admin(event, headers)
+            if not allowed:
+                return failure
+            matchup_id = path.split('/')[-1]
+            return delete_matchup(matchup_id, headers)
         elif path.startswith('/admin/matchup/') and path.endswith('/reset-votes') and method == 'POST':
             allowed, failure = require_admin(event, headers)
             if not allowed:
@@ -333,6 +339,7 @@ def build_matchup_payload(matchup, entries_cache=None, votes_cache=None):
             'id': matchup['id'],
             'title': matchup['title'],
             'category': matchup['category'],
+            'active': bool(matchup.get('active', False)),
             'cadence': matchup.get('cadence', ''),
             'starts_at': matchup.get('starts_at', ''),
             'ends_at': matchup.get('ends_at', ''),
@@ -415,8 +422,22 @@ def get_matchups(headers, apply_time_window=True):
                 continue
         filtered_matchups.append(matchup)
 
-    # Build without batch for now - simpler and works
-    matchups = [build_matchup_payload(m) for m in filtered_matchups]
+    # De-duplicate by entry pair to avoid showing accidental duplicate active matchups.
+    # Keep the most specific/current item (prefer one with a start time, then latest start).
+    def dedupe_rank(item):
+        starts_at = parse_iso8601(item.get('starts_at', ''))
+        has_start = 1 if starts_at else 0
+        ts = starts_at.timestamp() if starts_at else 0
+        return (has_start, ts, item.get('id', ''))
+
+    deduped = {}
+    for matchup in filtered_matchups:
+        pair_key = tuple(sorted([matchup.get('left_entry_id', ''), matchup.get('right_entry_id', '')]))
+        existing = deduped.get(pair_key)
+        if not existing or dedupe_rank(matchup) >= dedupe_rank(existing):
+            deduped[pair_key] = matchup
+
+    matchups = [build_matchup_payload(m) for m in deduped.values()]
 
     log('INFO', 'Matchups retrieved', count=len(matchups), apply_time_window=apply_time_window)
     cache_seconds = 60 if apply_time_window else 0
@@ -917,6 +938,22 @@ def update_matchup(matchup_id, body, headers):
         return json_response(200, headers, {'ok': True})
     except Exception as e:
         return json_response(500, headers, {'error': str(e)})
+
+def delete_matchup(matchup_id, headers):
+    if not matchup_id:
+        return json_response(400, headers, {'error': 'matchup_id required'})
+
+    try:
+        # Remove matchup definition
+        table.delete_item(Key={'pk': 'MATCHUP', 'sk': matchup_id})
+
+        # Remove vote counter row
+        table.delete_item(Key={'pk': f"VOTES#{matchup_id}", 'sk': 'TOTAL'})
+
+        return json_response(200, headers, {'ok': True, 'deleted': matchup_id})
+    except Exception as e:
+        return json_response(500, headers, {'error': str(e)})
+
 
 def reset_votes(matchup_id, headers):
     if not matchup_id:
