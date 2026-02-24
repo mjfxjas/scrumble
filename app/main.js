@@ -514,14 +514,41 @@ function getMatchupTheme(matchup) {
   return "";
 }
 
+function buildFallbackImage(entry) {
+  const label = String(entry?.name || "Chattanooga").slice(0, 32).replace(/[<>&"']/g, "");
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'>
+    <defs>
+      <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+        <stop offset='0%' stop-color='#1b2433'/>
+        <stop offset='55%' stop-color='#0f141d'/>
+        <stop offset='100%' stop-color='#2b1f10'/>
+      </linearGradient>
+    </defs>
+    <rect width='1200' height='800' fill='url(#g)'/>
+    <circle cx='190' cy='140' r='220' fill='rgba(212,175,55,0.18)'/>
+    <circle cx='1050' cy='720' r='260' fill='rgba(0,217,255,0.12)'/>
+    <text x='80' y='700' fill='rgba(255,255,255,0.86)' font-family='Arial, sans-serif' font-size='72' font-weight='700'>${label}</text>
+  </svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 function getEntryImage(entry) {
   if (!entry) return "";
-  if (entry.image_url) {
-    // Increase Google Places image size from 400 to 800
-    return entry.image_url.replace('maxWidthPx=400', 'maxWidthPx=800');
-  }
   const key = normalizeKey(entry.id || entry.name || "");
-  return IMAGE_OVERRIDES[key] || "";
+
+  // Prefer local/static overrides first (zero external API cost)
+  if (IMAGE_OVERRIDES[key]) return IMAGE_OVERRIDES[key];
+
+  if (!entry.image_url) return buildFallbackImage(entry);
+
+  // Avoid Google Places photo endpoints to prevent paid API usage / stale photo refs
+  const raw = String(entry.image_url || "");
+  if (raw.includes("places.googleapis.com") || raw.includes("maps.googleapis.com")) {
+    return buildFallbackImage(entry);
+  }
+
+  // For non-Google URLs, keep existing size upscale behavior
+  return raw.replace('maxWidthPx=400', 'maxWidthPx=800');
 }
 
 function createOptimizedImage(src, alt) {
