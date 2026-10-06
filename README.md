@@ -1,6 +1,6 @@
 # Scrumble - Scenic City Rumble
 
-Daily head-to-head voting for Chattanooga locals. Two options enter, you pick the winner.
+Voting site for Chattanooga matchups, with submissions, history, and an admin panel.
 
 ## Live Site
 **https://scrumble.cc**
@@ -90,7 +90,7 @@ python3 scripts/seed.py scrumble-data
 
 ### Admin Panel
 - Login-gated admin UI at `/admin`
-- Card-based layout with real-time stats
+- Matchup cards with vote totals and percentages
 - Inline editing for start/end times, cadence, and messages
 - Quick extend buttons (+1d, +7d, +14d)
 - Reset votes with confirmation
@@ -140,9 +140,9 @@ python3 scripts/seed.py scrumble-data
 - `SCRUMBLE_CF_DISTRIBUTION_ID` (default: `E2F6VQWXTCO8OB`) for `./autodeploy.sh`
 
 
-## Flagship Infra + Ops Path
+## Infrastructure and Operations
 
-Scrumble now includes a production-style IaC/ops scaffold:
+Infrastructure and operations files include:
 - Terraform environment separation (`terraform/environments/dev`, `terraform/environments/prod`)
 - Remote state backend templates (`backend.hcl.example`)
 - OIDC least-privilege bootstrap module (`terraform/bootstrap/oidc`)
@@ -154,7 +154,7 @@ Prod note:
 - Existing SAM-created prod resources are now adopted into Terraform state (DynamoDB + Lambda).
 - `terraform/environments/prod/terraform.tfvars` is pinned to the real Lambda physical name to avoid import/apply failures.
 
-## CI/CD (Low Cost)
+## CI/CD
 
 ### Offline backend tests
 
@@ -184,7 +184,6 @@ transaction; an expired guard can be replaced without a data migration.
 - Workflow: `.github/workflows/deploy.yml`
 - Trigger: manual only (`workflow_dispatch`)
 - Default: no frontend deploy and ops monitoring disabled
-- This prevents unattended deploys and surprise AWS spend.
 
 Required GitHub secrets for deploy:
 - `AWS_DEPLOY_ROLE_ARN` (OIDC role for GitHub Actions)

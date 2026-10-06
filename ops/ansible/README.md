@@ -1,6 +1,6 @@
 # Ansible Deployment Host Bootstrap
 
-This playbook is an evidence artifact for config management and can also be used in practice to prepare a Linux deployment runner.
+Ansible playbook for preparing a Linux deployment runner.
 
 ## What it does
 
@@ -18,6 +18,6 @@ cd ops/ansible
 ansible-playbook playbooks/bootstrap-deployer.yml
 ```
 
-## Cost profile
+## Scope
 
 This does not provision new cloud infrastructure. It only configures hosts you already own.

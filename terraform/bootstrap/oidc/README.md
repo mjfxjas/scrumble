@@ -1,10 +1,10 @@
 # Terraform OIDC Bootstrap
 
-This bootstrap module creates a least-privilege IAM role for GitHub Actions to run Terraform against Scrumble infrastructure.
+Creates an IAM role for GitHub Actions to run Terraform against Scrumble infrastructure.
 
 ## What It Creates
 - IAM role trusted by GitHub OIDC (`token.actions.githubusercontent.com`)
-- Inline least-privilege policy for:
+- Inline policy for:
   - Terraform remote state bucket + lock table access
   - Scrumble infra resources (DynamoDB/Lambda/IAM/SNS/CloudWatch)
 

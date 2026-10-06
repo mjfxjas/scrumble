@@ -1,8 +1,8 @@
 # Scrumble Terraform Infrastructure
 
-Infrastructure as Code for Scrumble using Terraform.
+Terraform configuration for Scrumble.
 
-## Flagship Ops Layout
+## Layout
 
 ```
 terraform/
@@ -64,14 +64,14 @@ terraform -chdir=terraform init \
   -backend-config="encrypt=true"
 ```
 
-## Least-Privilege IAM + OIDC Auth
+## IAM and OIDC
 
 Bootstrap module for GitHub OIDC deploy role:
 - `bootstrap/oidc/`
 
 It creates a role with:
 - GitHub OIDC trust policy (`token.actions.githubusercontent.com`)
-- Least-privilege policy scoped for state backend + Scrumble infra resources
+- Policy scoped to the state backend and Scrumble resources
 
 ## Monitoring + Dashboard
 

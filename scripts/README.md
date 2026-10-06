@@ -1,6 +1,6 @@
 # Image Enrichment Script
 
-Automatically fetch images from Google Places API and enrich your Scrumble entries.
+Fetches images and place details from Google Places and updates Scrumble entries in DynamoDB.
 
 ## Setup
 
@@ -69,17 +69,6 @@ python enrich_images.py --limit 10
 - `--download-to-s3` - Download and store in S3 (requires S3_BUCKET env var)
 - `--limit N` - Process only first N entries
 
-## Cost Estimate
-
-Google Places API pricing (as of 2024):
-- **Places Search**: $0.032 per request
-- **Place Details**: $0.017 per request
-- **Photos**: Free (just a URL)
-
-**Total per entry**: ~$0.05
-
-For 200 entries: ~$10
-
 ## What It Does
 
 1. Scans DynamoDB for entries without images
@@ -93,27 +82,6 @@ For 200 entries: ~$10
    - `address` - Formatted address from Google
    - `url` - Website URL if available
 
-## Example Output
-
-```
-🔍 Fetching entries from DynamoDB...
-📋 Found 15 entries to process
-
-[1/15] Velo Coffee
-  ✅ Google URL: https://maps.googleapis.com/maps/api/place/photo?...
-  
-[2/15] Tremont Tavern
-  ✅ Google URL: https://maps.googleapis.com/maps/api/place/photo?...
-
-============================================================
-✅ Success: 13
-⚠️  Skipped: 0
-❌ Errors: 2
-============================================================
-
-💰 Estimated Google API cost: $0.65
-```
-
 ## Troubleshooting
 
 ### "No results found"
@@ -123,11 +91,10 @@ For 200 entries: ~$10
 
 ### "No photos available"
 - Some places don't have photos in Google Places
-- Consider using Unsplash API as fallback for generic images
+- Use a manually selected image when no place photo is available
 
 ### Rate Limiting
 - Script includes small delays between requests
-- Google Places has generous limits (default: 1000 requests/day free tier)
 - Increase delay if you hit rate limits
 
 ## S3 Setup (Optional)
@@ -157,11 +124,3 @@ aws s3api put-bucket-policy --bucket scrumble-images --policy '{
 ```bash
 export S3_BUCKET='scrumble-images'
 ```
-
-## Alternatives
-
-If you don't want to use Google Places:
-
-1. **Yelp Fusion API** - Good for restaurants/businesses (5000 calls/day free)
-2. **Unsplash API** - Free stock photos (good for generic concepts)
-3. **Manual curation** - Best quality but time-consuming
