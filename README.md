@@ -156,11 +156,27 @@ Prod note:
 
 ## CI/CD (Low Cost)
 
+### Offline backend tests
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r backend/requirements-dev.txt
+python -m pytest -q tests/test_votes.py
+```
+
+These tests use fake credentials and Moto to intercept AWS requests. They check
+the rolling 24-hour vote limit, legacy vote history, atomic counter/history writes,
+and separate synthetic votes. Real votes commit a conditional per-fingerprint
+guard, the counter increment, and the timestamp history in one DynamoDB
+transaction; an expired guard can be replaced without a data migration.
+
 ### Continuous Integration
 - Workflow: `.github/workflows/ci.yml`
 - Runs on PRs and pushes to `main`
 - Performs:
   - Python compile checks (`backend/`, `scripts/`, `list_all_data.py`)
+  - Offline backend voting regression tests (`tests/test_votes.py`)
   - SAM template validation (`sam validate`)
   - Deploy script executable checks
 

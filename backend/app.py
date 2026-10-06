@@ -3,6 +3,8 @@ import os
 import boto3
 import uuid
 import time
+import hashlib
+from botocore.exceptions import ClientError
 from datetime import datetime, timezone
 from decimal import Decimal
 
@@ -458,7 +460,8 @@ def has_recent_vote(matchup_id, fingerprint, within_seconds=86400):
             ':prefix': vote_prefix
         },
         ScanIndexForward=False,
-        Limit=1
+        Limit=1,
+        ConsistentRead=True
     )
     items = resp.get('Items', [])
     if not items:
@@ -503,20 +506,54 @@ def cast_vote(body, headers, synthetic=False):
         return json_response(409, headers, {'error': 'Vote already cast for this matchup in the last 24 hours'}, error_code='VOTE_ALREADY_CAST')
 
     try:
-        table.update_item(
-            Key=vote_key,
-            UpdateExpression='ADD #side :inc',
-            ExpressionAttributeNames={'#side': side},
-            ExpressionAttributeValues={':inc': 1}
-        )
-        
-        if not synthetic:
-            table.put_item(Item={
-                'pk': f"VOTES#{matchup_id}",
-                'sk': f"V#{fingerprint}#{datetime.utcnow().isoformat()}",
-                'side': side,
-                'ts': datetime.utcnow().isoformat()
-            })
+        if synthetic:
+            table.update_item(
+                Key=vote_key,
+                UpdateExpression='ADD #side :inc',
+                ExpressionAttributeNames={'#side': side},
+                ExpressionAttributeValues={':inc': 1}
+            )
+        else:
+            # A stable guard closes the race between the legacy-history check
+            # and the writes. Commit the guard, total and history together.
+            voted_at_ms = int(now.timestamp() * 1000)
+            fingerprint_hash = hashlib.sha256(str(fingerprint).encode()).hexdigest()
+            timestamp = now.isoformat()
+            try:
+                dynamodb.meta.client.transact_write_items(TransactItems=[
+                    {'Put': {
+                        'TableName': table.name,
+                        'Item': {
+                            'pk': vote_key['pk'],
+                            'sk': f'GUARD#{fingerprint_hash}',
+                            'last_voted_at_ms': voted_at_ms
+                        },
+                        'ConditionExpression': 'attribute_not_exists(pk) OR last_voted_at_ms <= :cutoff',
+                        'ExpressionAttributeValues': {':cutoff': voted_at_ms - 86400000}
+                    }},
+                    {'Update': {
+                        'TableName': table.name,
+                        'Key': vote_key,
+                        'UpdateExpression': 'ADD #side :inc',
+                        'ExpressionAttributeNames': {'#side': side},
+                        'ExpressionAttributeValues': {':inc': 1}
+                    }},
+                    {'Put': {
+                        'TableName': table.name,
+                        'Item': {
+                            'pk': vote_key['pk'],
+                            'sk': f'V#{fingerprint}#{timestamp}',
+                            'side': side,
+                            'ts': timestamp
+                        }
+                    }}
+                ])
+            except ClientError as error:
+                reasons = error.response.get('CancellationReasons', [])
+                if (error.response['Error']['Code'] == 'TransactionCanceledException'
+                        and reasons and reasons[0].get('Code') == 'ConditionalCheckFailed'):
+                    return json_response(409, headers, {'error': 'Vote already cast for this matchup in the last 24 hours'}, error_code='VOTE_ALREADY_CAST')
+                raise
         
         log('INFO', 'Vote cast', matchup_id=matchup_id, side=side, synthetic=synthetic)
         put_metric('VoteCast', 1, dimensions={'MatchupId': matchup_id, 'Side': side})

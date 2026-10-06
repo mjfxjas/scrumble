@@ -12,7 +12,8 @@ command -v magick >/dev/null 2>&1 || {
 
 echo "Compressing images in app/public/..."
 
-for img in app/public/*.{avif,png,jpg,jpeg} 2>/dev/null; do
+shopt -s nullglob
+for img in app/public/*.{avif,png,jpg,jpeg}; do
   if [[ -f "$img" ]]; then
     echo "Compressing: $img"
     magick "$img" -quality 75 -resize 800x800\> "$img"
