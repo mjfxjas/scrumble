@@ -1157,43 +1157,68 @@ def post_comment(body, headers):
     return json_response(200, headers, {'ok': True})
 
 
+def commit_unique_counter_vote(target_table, vote_item, counter_key, field, matchup_id=None):
+    """Commit the per-device guard and counter together, or write neither."""
+    actions = [
+        {'Put': {
+            'TableName': target_table.name,
+            'Item': vote_item,
+            'ConditionExpression': 'attribute_not_exists(pk)'
+        }},
+        {'Update': {
+            'TableName': target_table.name,
+            'Key': counter_key,
+            'UpdateExpression': 'ADD #field :inc',
+            'ExpressionAttributeNames': {'#field': field},
+            'ExpressionAttributeValues': {':inc': 1}
+        }}
+    ]
+    if matchup_id is None:
+        # Updating a deleted comment must not recreate a counter-only row.
+        actions[1]['Update']['ConditionExpression'] = 'attribute_exists(pk)'
+    else:
+        actions.append({'ConditionCheck': {
+            'TableName': table.name,
+            'Key': {'pk': 'MATCHUP', 'sk': matchup_id},
+            'ConditionExpression': 'attribute_exists(pk)'
+        }})
+    try:
+        dynamodb.meta.client.transact_write_items(TransactItems=actions)
+    except ClientError as error:
+        reasons = error.response.get('CancellationReasons', [])
+        if error.response['Error']['Code'] == 'TransactionCanceledException':
+            if reasons and reasons[0].get('Code') == 'ConditionalCheckFailed':
+                return 'duplicate'
+            target_index = 1 if matchup_id is None else 2
+            if len(reasons) > target_index and reasons[target_index].get('Code') == 'ConditionalCheckFailed':
+                return 'not_found'
+        raise
+    return 'ok'
+
+
 def vote_comment(body, headers):
-    """Vote on a comment (upvote or downvote)"""
+    """Vote once per device on an existing comment."""
     matchup_id = body.get('matchup_id')
     timestamp = body.get('timestamp')
-    vote_type = body.get('vote_type')  # 'up' or 'down'
+    vote_type = body.get('vote_type')
     fingerprint = body.get('fingerprint', 'anon')
-    
+
     if not matchup_id or not timestamp or vote_type not in ['up', 'down']:
         return json_response(400, headers, {'error': 'Invalid vote'})
-    
+
     comments_table = dynamodb.Table('scrumble-comments')
-    
-    # Check if already voted
-    vote_key = f'VOTE#{matchup_id}#{timestamp}#{fingerprint}'
-    existing = comments_table.get_item(
-        Key={'pk': 'COMMENT_VOTE', 'sk': vote_key}
-    ).get('Item')
-    
-    if existing:
-        return json_response(400, headers, {'error': 'Already voted'})
-    
-    # Record vote
-    comments_table.put_item(Item={
-        'pk': 'COMMENT_VOTE',
-        'sk': vote_key,
-        'vote_type': vote_type,
-        'created_at': datetime.utcnow().isoformat()
-    })
-    
-    # Update comment vote count
-    field = 'upvotes' if vote_type == 'up' else 'downvotes'
-    comments_table.update_item(
-        Key={'pk': f'COMMENT#{matchup_id}', 'sk': f'TIMESTAMP#{timestamp}'},
-        UpdateExpression=f'ADD {field} :inc',
-        ExpressionAttributeValues={':inc': 1}
+    outcome = commit_unique_counter_vote(
+        comments_table,
+        {'pk': 'COMMENT_VOTE', 'sk': f'VOTE#{matchup_id}#{timestamp}#{fingerprint}',
+         'vote_type': vote_type, 'created_at': datetime.now(timezone.utc).isoformat()},
+        {'pk': f'COMMENT#{matchup_id}', 'sk': f'TIMESTAMP#{timestamp}'},
+        'upvotes' if vote_type == 'up' else 'downvotes'
     )
-    
+    if outcome == 'duplicate':
+        return json_response(400, headers, {'error': 'Already voted'})
+    if outcome == 'not_found':
+        return json_response(404, headers, {'error': 'Comment not found'})
+
     log('INFO', 'Comment vote', matchup_id=matchup_id, timestamp=timestamp, vote_type=vote_type)
     return json_response(200, headers, {'ok': True})
 
@@ -1217,36 +1242,26 @@ def delete_comment(matchup_id, timestamp, headers):
 
 
 def rate_matchup(body, headers):
-    """Rate a matchup (good/bad)"""
+    """Rate an existing matchup once per device."""
     matchup_id = body.get('matchup_id')
-    rating = body.get('rating')  # 'good' or 'bad'
+    rating = body.get('rating')
     fingerprint = body.get('fingerprint', 'anon')
-    
-    if rating not in ['good', 'bad']:
+
+    if not matchup_id or rating not in ['good', 'bad']:
         return json_response(400, headers, {'error': 'Invalid rating'})
-    
-    # Check if already rated
-    rate_key = {'pk': f'MATCHUP_RATING#{matchup_id}', 'sk': f'VOTE#{fingerprint}'}
-    existing = table.get_item(Key=rate_key).get('Item')
-    
-    if existing:
-        return json_response(400, headers, {'error': 'Already rated'})
-    
-    # Record rating
-    table.put_item(Item={
-        'pk': f'MATCHUP_RATING#{matchup_id}',
-        'sk': f'VOTE#{fingerprint}',
-        'rating': rating,
-        'created_at': datetime.utcnow().isoformat()
-    })
-    
-    # Update aggregate
-    field = 'good_count' if rating == 'good' else 'bad_count'
-    table.update_item(
-        Key={'pk': f'MATCHUP_RATING#{matchup_id}', 'sk': 'AGGREGATE'},
-        UpdateExpression=f'ADD {field} :inc',
-        ExpressionAttributeValues={':inc': 1}
+
+    outcome = commit_unique_counter_vote(
+        table,
+        {'pk': f'MATCHUP_RATING#{matchup_id}', 'sk': f'VOTE#{fingerprint}',
+         'rating': rating, 'created_at': datetime.now(timezone.utc).isoformat()},
+        {'pk': f'MATCHUP_RATING#{matchup_id}', 'sk': 'AGGREGATE'},
+        'good_count' if rating == 'good' else 'bad_count',
+        matchup_id=matchup_id
     )
-    
+    if outcome == 'duplicate':
+        return json_response(400, headers, {'error': 'Already rated'})
+    if outcome == 'not_found':
+        return json_response(404, headers, {'error': 'Matchup not found'})
+
     log('INFO', 'Matchup rated', matchup_id=matchup_id, rating=rating)
     return json_response(200, headers, {'ok': True})

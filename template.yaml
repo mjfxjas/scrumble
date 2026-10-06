@@ -79,6 +79,11 @@ Resources:
         - Statement:
           - Effect: Allow
             Action:
+              - dynamodb:ConditionCheckItem
+            Resource: !GetAtt ScrumbleTable.Arn
+        - Statement:
+          - Effect: Allow
+            Action:
               - cloudwatch:PutMetricData
             Resource: '*'
       FunctionUrlConfig:

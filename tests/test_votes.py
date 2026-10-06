@@ -114,3 +114,80 @@ def test_synthetic_votes_are_repeatable_and_do_not_block_real_votes(app):
     assert records(app) == []
     assert vote(app)['statusCode'] == 200
     assert total(app)['left'] == 1
+
+
+@pytest.fixture
+def comments(app):
+    comments_table = app.dynamodb.create_table(
+        TableName='scrumble-comments',
+        KeySchema=[{'AttributeName': 'pk', 'KeyType': 'HASH'},
+                   {'AttributeName': 'sk', 'KeyType': 'RANGE'}],
+        AttributeDefinitions=[{'AttributeName': 'pk', 'AttributeType': 'S'},
+                              {'AttributeName': 'sk', 'AttributeType': 'S'}],
+        BillingMode='PAY_PER_REQUEST'
+    )
+    comments_table.put_item(Item={'pk': 'COMMENT#test', 'sk': 'TIMESTAMP#123',
+                                 'author_name': 'Test', 'upvotes': 0, 'downvotes': 0})
+    return comments_table
+
+
+def comment_vote(app, vote_type='up', timestamp='123', fingerprint='device'):
+    return app.vote_comment({'matchup_id': 'test', 'timestamp': timestamp,
+                             'vote_type': vote_type, 'fingerprint': fingerprint}, {})
+
+
+def test_duplicate_comment_vote_does_not_increment_opposite_counter(app, comments):
+    assert comment_vote(app)['statusCode'] == 200
+    assert comment_vote(app, vote_type='down')['statusCode'] == 400
+    item = comments.get_item(Key={'pk': 'COMMENT#test', 'sk': 'TIMESTAMP#123'})['Item']
+    assert item['upvotes'] == 1
+    assert item['downvotes'] == 0
+
+
+def test_missing_comment_does_not_leave_guard_or_create_phantom_comment(app, comments):
+    assert comment_vote(app, timestamp='missing')['statusCode'] == 404
+    assert len(comments.scan()['Items']) == 1
+
+
+def test_comment_counter_failure_rolls_back_guard_and_allows_retry(app, comments):
+    from botocore.exceptions import ClientError
+    key = {'pk': 'COMMENT#test', 'sk': 'TIMESTAMP#123'}
+    comments.update_item(Key=key, UpdateExpression='SET upvotes = :bad',
+                         ExpressionAttributeValues={':bad': 'invalid'})
+    with pytest.raises(ClientError):
+        comment_vote(app)
+    assert len(comments.scan()['Items']) == 1
+    comments.update_item(Key=key, UpdateExpression='SET upvotes = :zero',
+                         ExpressionAttributeValues={':zero': 0})
+    assert comment_vote(app)['statusCode'] == 200
+
+
+def rate(app, rating='good', matchup_id='test', fingerprint='device'):
+    return app.rate_matchup({'matchup_id': matchup_id, 'rating': rating,
+                            'fingerprint': fingerprint}, {})
+
+
+def test_duplicate_rating_is_atomic_and_distinct_devices_can_rate(app):
+    assert rate(app)['statusCode'] == 200
+    assert rate(app, rating='bad')['statusCode'] == 400
+    assert rate(app, rating='bad', fingerprint='another')['statusCode'] == 200
+    item = app.table.get_item(Key={'pk': 'MATCHUP_RATING#test', 'sk': 'AGGREGATE'})['Item']
+    assert item['good_count'] == item['bad_count'] == 1
+
+
+def test_missing_matchup_cannot_be_rated_and_leaves_no_rows(app):
+    assert rate(app, matchup_id='missing')['statusCode'] == 404
+    assert app.table.query(KeyConditionExpression='pk = :pk',
+                           ExpressionAttributeValues={':pk': 'MATCHUP_RATING#missing'})['Items'] == []
+    assert rate(app, matchup_id=None)['statusCode'] == 400
+
+
+def test_rating_counter_failure_rolls_back_guard_and_allows_retry(app):
+    from botocore.exceptions import ClientError
+    key = {'pk': 'MATCHUP_RATING#test', 'sk': 'AGGREGATE'}
+    app.table.put_item(Item={**key, 'good_count': 'invalid'})
+    with pytest.raises(ClientError):
+        rate(app)
+    assert app.table.get_item(Key={'pk': 'MATCHUP_RATING#test', 'sk': 'VOTE#device'}).get('Item') is None
+    app.table.delete_item(Key=key)
+    assert rate(app)['statusCode'] == 200

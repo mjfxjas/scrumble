@@ -47,6 +47,11 @@ resource "aws_iam_role_policy" "lambda_dynamodb" {
         ]
       },
       {
+        Effect   = "Allow"
+        Action   = ["dynamodb:ConditionCheckItem"]
+        Resource = var.table_arn
+      },
+      {
         Effect = "Allow"
         Action = [
           "cloudwatch:PutMetricData"

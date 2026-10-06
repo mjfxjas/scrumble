@@ -226,3 +226,24 @@ sam deploy --parameter-overrides AdminKey=... EnableOpsMonitoring=true OpsAlarmE
 - Mayor matchup has red/white/blue patriotic theme
 - EVA theme easter egg (NERV MODE button) - anime styling
 - Preview overrides live in `app/config.js` (`window.SCRUMBLE_PREVIEW_OVERRIDES`)
+
+
+## Comment Votes and Matchup Ratings
+
+Comment votes and matchup ratings commit the per-device guard and aggregate
+counter in a single DynamoDB transaction. Duplicate requests leave counters
+unchanged. Missing comments or matchups return 404 without creating orphan
+records; failed writes roll back the guard so a valid retry can succeed.
+
+Run all 14 offline voting regressions with:
+
+```bash
+python -m pip install -r backend/requirements-dev.txt
+python -m pytest -q tests/test_votes.py
+```
+
+SAM and Terraform policies include `dynamodb:ConditionCheckItem` on the main
+table for the rating transaction's matchup-existence check. AWS documents the
+required permissions in [Using IAM with DynamoDB transactions](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/transaction-apis-iam.html).
+Transactions use two writes per item, so review table capacity before deployment;
+these source changes do not publish to AWS.
